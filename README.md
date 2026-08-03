@@ -4,15 +4,31 @@ Sistema de Gestão de Biblioteca Pública integrado ao ecossistema **OrdoB**.
 
 ## Instalação
 
-### Requisitos
-- Python 3.10+
-- pip
+### Opção 1: Executável Pronto (Recomendado)
 
-### Setup
+#### Windows
+1. Acesse a [página de releases no GitHub](https://github.com/anomalyco/libryno/releases)
+2. Baixe o arquivo `LIBRYNO-Setup-2.0.0.exe`
+3. Execute o instalador e siga as instruções
+
+#### Linux
+```bash
+# Via instalador (Debian/Ubuntu)
+wget https://github.com/anomalyco/libryno/releases/download/v2.0.0/libryno-2.0.0-linux-x64.deb
+sudo dpkg -i libryno-2.0.0-linux-x64.deb
+sudo apt install -f  # Corrige dependências
+
+# Via AppImage (qualquer distribuição)
+wget https://github.com/anomalyco/libryno/releases/download/v2.0.0/libryno-2.0.0-linux-x64.AppImage
+chmod +x libryno-2.0.0-linux-x64.AppImage
+./libryno-2.0.0-linux-x64.AppImage
+```
+
+### Opção 2: Via Git (Código Fonte)
 
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/libryno.git
+git clone https://github.com/anomalyco/libryno.git
 cd libryno
 
 # Instale as dependências
@@ -26,17 +42,24 @@ cp .env.example .env     # Linux/Mac
 python src/main.py
 ```
 
-### Build (Gerar Instalador)
+### Opção 3: Build Local
 
 ```bash
 # Instale PyInstaller
 pip install pyinstaller
 
-# Gere o executável
-pyinstaller build.spec --clean
+# Build com PyInstaller
+make build        # Linux
+build.bat         # Windows
 
 # O executável estará em dist/
 ```
+
+### Requisitos
+
+- Python 3.10+
+- pip
+- (Para build) PyInstaller 5.10+
 
 ## Estrutura do Projeto
 
@@ -50,9 +73,9 @@ src/
 │   ├── models.py        # Modelos de dados
 │   └── migrations.py    # Setup do banco
 ├── auth/
-│   ├── ordob_client.py  # Cliente API OrdoB
+│   ├── ordob_client.py  # Cliente API OrdoB (com retry + SSE)
 │   ├── session.py       # Gerenciamento de sessão
-│   └── license.py       # Validação de licença
+│   └── license.py       # Validação de licença + monitoramento
 ├── features/
 │   ├── books.py         # CRUD Livros
 │   ├── readers.py       # CRUD Leitores
@@ -67,7 +90,14 @@ src/
 │   ├── widgets/         # Componentes reutilizáveis
 │   ├── themes/          # Temas visuais
 │   └── i18n/            # Idiomas
-└── utils/               # Utilitários
+└── utils/
+    ├── sse_client.py    # Cliente SSE tempo real
+    ├── logger.py        # Logging
+    ├── crypto.py        # Hash de senhas
+    ├── validators.py    # Validações
+    ├── excel_export.py  # Exportação Excel
+    ├── isbn_api.py      # Consulta ISBN
+    └── ...
 ```
 
 ## Funcionalidades

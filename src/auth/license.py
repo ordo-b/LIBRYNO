@@ -1,42 +1,140 @@
-"""Gerenciamento de licença premium via OrdoB."""
+"""Gerenciamento de licença premium via OrdoB com verificação de assinatura."""
+import time
+import threading
 from typing import Optional, Tuple
 from src.auth.ordob_client import client
 from src.auth.session import session
 from src.utils.logger import logger
 
 
+class LicenseManager:
+    """Gerenciador de licença premium com verificação periódica."""
+
+    CHECK_INTERVAL = 3600
+
+    def __init__(self):
+        self._last_check = 0.0
+        self._check_thread: Optional[threading.Thread] = None
+        self._stop_event = threading.Event()
+
+    def validate_license(self, license_key: str) -> Tuple[bool, str]:
+        """Valida uma chave de licença OrdoB Premium."""
+        result = client.validate_license(license_key)
+        if result is None:
+            return False, "Não foi possível conectar ao servidor OrdoB."
+
+        if result.get("valid"):
+            session.set_premium(True, license_key)
+            org = result.get("organization", "")
+            role = result.get("role", "owner")
+            expires = result.get("expires_at", "Nunca")
+            logger.info("License activated: {} for {} (role: {})", license_key, org, role)
+            self._last_check = time.time()
+            return True, (
+                f"Licença OrdoB Premium ativada!\n\n"
+                f"Organização: {org}\n"
+                f"Perfil: {role}\n"
+                f"Expira: {expires}"
+            )
+
+        error = result.get("error", "Licença inválida.")
+        expires = result.get("expires_at")
+        session.set_premium(False)
+        logger.warning("License invalid: {} - {}", license_key, error)
+        return False, f"{error}\n\nData de expiração: {expires or 'N/A'}"
+
+    def check_existing_license(self) -> bool:
+        """Verifica se já existe uma licença salva na sessão."""
+        if not session.is_premium and not session.license_key:
+            return False
+
+        if session.license_key:
+            result = client.validate_license(session.license_key)
+            if result and result.get("valid"):
+                session.set_premium(True, session.license_key)
+                self._last_check = time.time()
+                return True
+            session.set_premium(False)
+            logger.info("Existing license expired or invalid, downgrading to free")
+
+        if session.is_premium:
+            return True
+
+        return False
+
+    def periodic_check_start(self):
+        """Inicia verificação periódica de licença em background."""
+        if self._check_thread and self._check_thread.is_alive():
+            return
+
+        self._stop_event.clear()
+        self._check_thread = threading.Thread(
+            target=self._periodic_check_loop,
+            daemon=True,
+            name="LicenseCheck",
+        )
+        self._check_thread.start()
+
+    def _periodic_check_loop(self):
+        """Loop de verificação periódica da licença."""
+        while not self._stop_event.is_set():
+            try:
+                if session.license_key:
+                    result = client.validate_license(session.license_key)
+                    if result and result.get("valid"):
+                        if not session.is_premium:
+                            session.set_premium(True, session.license_key)
+                            logger.info("License restored via periodic check")
+                    else:
+                        if session.is_premium:
+                            session.set_premium(False)
+                            logger.info("License expired, downgraded to free")
+                            self._notify_license_expired()
+            except Exception as e:
+                logger.warning("Periodic license check error: {}", e)
+
+            self._stop_event.wait(self.CHECK_INTERVAL)
+
+    def _notify_license_expired(self):
+        """Emite notificação quando a licença expira."""
+        try:
+            from src.features.notifications import NotificationsCRUD
+            NotificationsCRUD.create(
+                titulo="Licença expirada",
+                mensagem=(
+                    "Sua licença OrdoB Premium expirou. "
+                    "Renove para continuar usando recursos premium."
+                ),
+                tipo="license_expired",
+            )
+        except Exception as e:
+            logger.error("Error notifying license expiry: {}", e)
+
+    def periodic_check_stop(self):
+        """Para a verificação periódica."""
+        self._stop_event.set()
+        if self._check_thread and self._check_thread.is_alive():
+            self._check_thread.join(timeout=3)
+        logger.info("License periodic check stopped")
+
+
+_license_manager = LicenseManager()
+
+
 def validate_license(license_key: str) -> Tuple[bool, str]:
-    """Valida uma chave de licença. Retorna (is_valid, mensagem)."""
-    result = client.validate_license(license_key)
-    if result is None:
-        return False, "Não foi possível conectar ao servidor OrdoB."
-
-    if result.get("valid"):
-        session.set_premium(True, license_key)
-        org = result.get("organization", "")
-        logger.info("License activated: {} for {}", license_key, org)
-        return True, f"Licença ativada com sucesso!\nOrganização: {org}"
-
-    error = result.get("error", "Licença inválida.")
-    session.set_premium(False)
-    logger.warning("License invalid: {} - {}", license_key, error)
-    return False, error
+    """Valida uma chave de licença."""
+    return _license_manager.validate_license(license_key)
 
 
 def check_existing_license() -> bool:
     """Verifica se já existe uma licença salva na sessão."""
-    if session.is_premium and session.license_key:
-        result = client.validate_license(session.license_key)
-        if result and result.get("valid"):
-            return True
-        session.set_premium(False)
-        logger.info("Existing license expired or invalid, downgrading to free")
-    return False
+    return _license_manager.check_existing_license()
 
 
 def deactivate_license():
     """Remove a licença premium da sessão."""
     session.set_premium(False)
+    _license_manager.periodic_check_stop()
     logger.info("License deactivated")
 
 
@@ -48,4 +146,17 @@ def get_license_info() -> Optional[dict]:
         "key": session.license_key,
         "status": "active",
         "user": session.user_name,
+        "organization": session.user.get("organization_name") if session.user else None,
     }
+
+
+def start_license_monitoring():
+    """Inicia o monitoramento periódico de licença em background."""
+    if session.license_key:
+        _license_manager.periodic_check_start()
+
+
+def stop_license_monitoring():
+    """Para o monitoramento de licença."""
+    _license_manager.periodic_check_stop()
+

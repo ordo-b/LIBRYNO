@@ -129,6 +129,11 @@ class LoginScreen(QMainWindow):
             token = result.get("token", "")
             user = result.get("user", {})
             session.login(token, user)
+
+            if client.health_check():
+                from src.auth.license import check_existing_license
+                check_existing_license()
+
             QMessageBox.information(self, t("messages.success"), t("login.success"))
             self.close()
             if self.on_success:
