@@ -28,6 +28,13 @@ class Config:
     ORDOB_API_URL = os.getenv("ORDOB_API_URL", "https://api.ordob.com/api")
     ORDOB_API_URL_DEV = os.getenv("ORDOB_API_URL_DEV", "http://localhost:8000/api")
     ORDOB_PRODUCT_SLUG = os.getenv("ORDOB_PRODUCT_SLUG", "libryno")
+    ORDOB_ENV = os.getenv("ORDOB_ENV", "production")
+
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "libryno://auth/callback")
+
+    SYNC_ENABLED = os.getenv("SYNC_ENABLED", "true").lower() == "true"
+    SYNC_INTERVAL = int(os.getenv("SYNC_INTERVAL", "300"))  # 5 minutos
 
     @classmethod
     def get_api_url(cls) -> str:

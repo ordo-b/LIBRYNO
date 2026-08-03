@@ -1,17 +1,20 @@
 """Bootstrap do aplicativo LIBRYNO v2.0."""
 import sys
-from PyQt5 import QtWidgets, QtGui
+from PySide6 import QtWidgets, QtGui
 from src.config import Config
 from src.core.migrations import setup_database
 from src.core.seed import seed_demo_data
-from src.ui.themes.theme_manager import apply_theme, get_current_theme
+from src.ui.themes.theme_manager import apply_theme, get_current_theme, apply_system_theme
 from src.ui.i18n.translator import set_locale, _load_locale
 from src.auth.session import session
 from src.auth.license import check_existing_license, start_license_monitoring, stop_license_monitoring
 from src.auth.ordob_client import client
+from src.sync.sync_manager import sync_manager
 from src.ui.screens.login import LoginScreen
 from src.ui.screens.home import HomeScreen
 from src.utils.logger import logger
+from src.utils.system_theme import get_system_theme
+import atexit
 
 
 _sse_stop_event = None
@@ -29,7 +32,7 @@ def run():
     _load_locale("en")
     set_locale("pt_BR")
 
-    apply_theme(app, get_current_theme() or "dark")
+    apply_system_theme(app)
 
     setup_database()
     seed_demo_data()
@@ -39,12 +42,14 @@ def run():
         check_existing_license()
         start_license_monitoring()
         _start_realtime_notifications()
+        sync_manager.sync_start(Config.SYNC_INTERVAL)
         home = HomeScreen()
         home.show()
     else:
         login = LoginScreen(on_success=lambda: _show_home(login))
         login.show()
 
+    atexit.register(cleanup)
     sys.exit(app.exec_())
 
 
@@ -54,6 +59,7 @@ def _show_home(login_screen):
     home.show()
     start_license_monitoring()
     _sse_stop_event = _start_realtime_notifications()
+    sync_manager.sync_start(Config.SYNC_INTERVAL)
 
 
 def _on_notification(data: dict):
@@ -102,6 +108,7 @@ def _on_sse_error(error: str):
 def cleanup():
     """Cleanup ao encerrar aplicativo."""
     stop_license_monitoring()
+    sync_manager.sync_stop()
     if _sse_stop_event:
         _sse_stop_event.set()
     logger.info("LIBRYNO shutdown complete")

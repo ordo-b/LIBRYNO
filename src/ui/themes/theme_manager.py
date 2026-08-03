@@ -1,7 +1,8 @@
-"""Gerenciador de temas visuais."""
+"""Gerenciador de temas visuais com detecção automática do sistema."""
 from pathlib import Path
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 from src.utils.logger import logger
+from src.utils.system_theme import get_system_theme
 
 THEMES_DIR = Path(__file__).parent
 _current_theme = "dark"
@@ -40,3 +41,12 @@ def cycle_theme(app: QtWidgets.QApplication):
     idx = themes.index(_current_theme) if _current_theme in themes else 0
     next_idx = (idx + 1) % len(themes)
     apply_theme(app, themes[next_idx])
+
+
+def apply_system_theme(app: QtWidgets.QApplication):
+    """Aplica o tema do sistema operacional automaticamente."""
+    system_theme = get_system_theme()
+    if system_theme:
+        apply_theme(app, system_theme)
+    else:
+        apply_theme(app, "dark")

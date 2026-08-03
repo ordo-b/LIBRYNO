@@ -1,6 +1,6 @@
 """Widget de notificação toast (popup flutuante)."""
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtCore import QTimer
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtCore import QTimer
 
 
 class ToastNotification(QtWidgets.QLabel):

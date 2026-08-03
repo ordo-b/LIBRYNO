@@ -1,13 +1,14 @@
 """Tela de Login - Integrada com OrdoB API."""
-from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
+from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QMessageBox, QFrame,
 )
 from src.config import Config
 from src.auth.ordob_client import client
 from src.auth.session import session
+from src.auth.license import check_existing_license
 from src.ui.i18n.translator import t
 from src.utils.logger import logger
 
@@ -28,7 +29,6 @@ class LoginScreen(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Left panel - branding
         left = QFrame()
         left.setStyleSheet("""
             QFrame {
@@ -62,7 +62,6 @@ class LoginScreen(QMainWindow):
 
         layout.addWidget(left, 1)
 
-        # Right panel - form
         right = QFrame()
         right.setStyleSheet("QFrame { background-color: #1a1a2e; }")
         right_layout = QVBoxLayout(right)
@@ -131,7 +130,6 @@ class LoginScreen(QMainWindow):
             session.login(token, user)
 
             if client.health_check():
-                from src.auth.license import check_existing_license
                 check_existing_license()
 
             QMessageBox.information(self, t("messages.success"), t("login.success"))
@@ -150,9 +148,10 @@ class LoginScreen(QMainWindow):
         if not session.is_authenticated:
             reply = QMessageBox.question(
                 self, "Sair", "Deseja realmente sair?",
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
             )
-            if reply == QMessageBox.Yes:
+            if reply == QMessageBox.StandardButton.Yes:
                 event.accept()
             else:
                 event.ignore()

@@ -1,13 +1,14 @@
 """Tela Principal - Dashboard + CRUD + Features."""
 from datetime import datetime
-from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
+from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QMessageBox, QFrame,
     QStackedWidget, QTableWidget, QTableWidgetItem, QComboBox,
     QTabWidget, QTextEdit, QFileDialog, QInputDialog,
 )
+from PySide6.QtGui import QAction
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -977,7 +978,7 @@ class HomeScreen(QMainWindow):
         QMessageBox.information(self, t("notifications.title"), msg)
 
     def _toggle_theme(self):
-        from PyQt5.QtWidgets import QApplication
+        from PySide6.QtWidgets import QApplication
         app = QApplication.instance()
         if app:
             cycle_theme(app)

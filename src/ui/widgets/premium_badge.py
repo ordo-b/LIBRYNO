@@ -1,5 +1,5 @@
 """Widget de badge premium/free."""
-from PyQt5 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 
 
 class PremiumBadge(QtWidgets.QLabel):
