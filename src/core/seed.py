@@ -1,12 +1,13 @@
 """Sistema de seed data - Dados demo para preencher o banco vazio."""
 import random
 from datetime import datetime, timedelta
+
 from src.core.database import DatabaseSession
 from src.core.models import Book, Reader
-from src.features.readers import ReadersCRUD
+from src.features.books import BooksCRUD
 from src.features.collaborators import CollaboratorsCRUD
+from src.features.readers import ReadersCRUD
 from src.utils.logger import logger
-
 
 DEMO_BOOKS = [
     {"n_tombo": "0001", "isbn": "978-85-359-0295-6", "editora": "Companhia das Letras",

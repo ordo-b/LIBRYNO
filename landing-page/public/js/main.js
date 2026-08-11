@@ -1,5 +1,5 @@
-// ============================================================
-// LIBRYNO Landing Page — Super Premium JS
+﻿// ============================================================
+// LIBRYNO Landing Page â€” Super Premium JS
 // ============================================================
 
 // === Particles Canvas ===
@@ -37,7 +37,7 @@
     draw() {
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(92, 225, 230, ${this.opacity})`;
+      ctx.fillStyle = `rgba(139, 92, 246, ${this.opacity})`;
       ctx.fill();
     }
   }
@@ -54,7 +54,7 @@
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 120) {
           ctx.beginPath();
-          ctx.strokeStyle = `rgba(92, 225, 230, ${0.06 * (1 - dist / 120)})`;
+          ctx.strokeStyle = `rgba(139, 92, 246, ${0.06 * (1 - dist / 120)})`;
           ctx.lineWidth = 0.5;
           ctx.moveTo(particles[a].x, particles[a].y);
           ctx.lineTo(particles[b].x, particles[b].y);

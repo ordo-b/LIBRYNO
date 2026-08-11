@@ -1,13 +1,14 @@
 """Sistema de relatórios avançados (PREMIUM)."""
-from pathlib import Path
 from datetime import datetime
-from reportlab.lib.pagesizes import A4
+
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
 from src.features.books import BooksCRUD
-from src.features.readers import ReadersCRUD
 from src.features.loans import LoansCRUD
+from src.features.readers import ReadersCRUD
 from src.utils.logger import logger
 
 

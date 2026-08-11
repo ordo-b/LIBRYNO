@@ -1,6 +1,7 @@
 """CRUD de Leitores."""
-from typing import Optional
+
 from sqlalchemy import or_
+
 from src.core.database import DatabaseSession
 from src.core.models import Reader
 from src.utils.logger import logger
@@ -11,7 +12,7 @@ class ReadersCRUD:
     def create(nome: str, telefone: str = "", email: str = "", cpf: str = "",
                identidade: str = "", cep: str = "", escolaridade: str = "",
                data_nascimento: str = "", endereco: str = "",
-               data_cadastro: str = "") -> Optional[Reader]:
+               data_cadastro: str = "") -> Reader | None:
         try:
             with DatabaseSession() as session:
                 reader = Reader(

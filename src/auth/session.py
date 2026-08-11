@@ -1,7 +1,6 @@
 """Gerenciamento de sessão e token do usuário."""
 import json
-from pathlib import Path
-from typing import Optional
+
 from src.config import DATA_DIR
 from src.utils.logger import logger
 
@@ -10,10 +9,10 @@ SESSION_FILE = DATA_DIR / ".session"
 
 class Session:
     def __init__(self):
-        self._token: Optional[str] = None
-        self._user: Optional[dict] = None
+        self._token: str | None = None
+        self._user: dict | None = None
         self._premium: bool = False
-        self._license_key: Optional[str] = None
+        self._license_key: str | None = None
         self._load_session()
 
     @property
@@ -25,11 +24,11 @@ class Session:
         return self._premium
 
     @property
-    def token(self) -> Optional[str]:
+    def token(self) -> str | None:
         return self._token
 
     @property
-    def user(self) -> Optional[dict]:
+    def user(self) -> dict | None:
         return self._user
 
     @property
@@ -45,7 +44,7 @@ class Session:
         return ""
 
     @property
-    def license_key(self) -> Optional[str]:
+    def license_key(self) -> str | None:
         return self._license_key
 
     def login(self, token: str, user: dict):

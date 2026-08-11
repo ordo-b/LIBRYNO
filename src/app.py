@@ -1,21 +1,27 @@
 """Bootstrap do aplicativo LIBRYNO v2.0."""
+import atexit
 import sys
-from PySide6 import QtWidgets, QtGui
+
+from PySide6 import QtGui, QtWidgets
+
+from src.auth.license import (
+    check_existing_license,
+    start_license_monitoring,
+    stop_license_monitoring,
+)
+from src.auth.ordob_client import client
+from src.auth.session import session
 from src.config import Config
 from src.core.migrations import setup_database
 from src.core.seed import seed_demo_data
-from src.ui.themes.theme_manager import apply_theme, get_current_theme, apply_system_theme
-from src.ui.i18n.translator import set_locale, _load_locale
-from src.auth.session import session
-from src.auth.license import check_existing_license, start_license_monitoring, stop_license_monitoring
-from src.auth.ordob_client import client
 from src.sync.sync_manager import sync_manager
-from src.ui.screens.login import LoginScreen
+from src.ui.i18n.translator import _load_locale, set_locale
 from src.ui.screens.home import HomeScreen
+from src.ui.screens.login import LoginScreen
+from src.ui.themes.theme_manager import (
+    apply_system_theme,
+)
 from src.utils.logger import logger
-from src.utils.system_theme import get_system_theme
-import atexit
-
 
 _sse_stop_event = None
 

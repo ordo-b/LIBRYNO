@@ -1,14 +1,15 @@
 """Testes de integração para banco de dados."""
-import sys
 import os
-import tempfile
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from src.core.database import Base
-from src.core.models import Book, Reader, Collaborator, Loan
+from src.core.models import Book, Collaborator, Loan, Reader
 from src.utils.crypto import hash_password
 
 

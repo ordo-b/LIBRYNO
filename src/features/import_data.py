@@ -1,7 +1,8 @@
 """Feature premium: Importação de planilhas Excel/CSV."""
 from pathlib import Path
-from typing import Optional
+
 import pandas as pd
+
 from src.features.books import BooksCRUD
 from src.features.readers import ReadersCRUD
 from src.utils.logger import logger
@@ -71,7 +72,7 @@ def _normalize_columns(columns: list[str], col_map: dict) -> dict[int, str]:
     return mapping
 
 
-def _read_file(filepath: str) -> Optional[pd.DataFrame]:
+def _read_file(filepath: str) -> pd.DataFrame | None:
     """Lê arquivo Excel ou CSV."""
     path = Path(filepath)
     ext = path.suffix.lower()

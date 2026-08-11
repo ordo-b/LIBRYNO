@@ -1,38 +1,50 @@
 """Tela Principal - Dashboard + CRUD + Features."""
-from datetime import datetime
-from PySide6 import QtWidgets, QtCore, QtGui
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QMessageBox, QFrame,
-    QStackedWidget, QTableWidget, QTableWidgetItem, QComboBox,
-    QTabWidget, QTextEdit, QFileDialog, QInputDialog,
-)
-from PySide6.QtGui import QAction
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from PySide6 import QtGui
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
-from src.config import Config
+from src.auth.license import validate_license
 from src.auth.session import session
-from src.auth.license import validate_license, check_existing_license
+from src.config import Config
 from src.features.books import BooksCRUD
-from src.features.readers import ReadersCRUD
 from src.features.collaborators import CollaboratorsCRUD
+from src.features.import_data import export_template, import_books, import_readers
 from src.features.loans import LoansCRUD
 from src.features.notifications import NotificationsCRUD
-from src.features.backup import BackupManager
-from src.features.catalog import CatalogCRUD
-from src.features.reports import generate_books_report, generate_readers_report, generate_loans_report
-from src.features.import_data import import_books, import_readers, export_template
-from src.utils.isbn_api import set_isbn
-from src.utils.excel_export import export_books_to_excel, export_readers_to_excel
-from src.utils.validators import validate_book, validate_reader
-from src.utils.constants import APP_AUTHOR, APP_ORG, APP_CNPJ
+from src.features.readers import ReadersCRUD
+from src.features.reports import (
+    generate_books_report,
+    generate_loans_report,
+    generate_readers_report,
+)
 from src.ui.i18n.translator import t
-from src.ui.widgets.toast import ToastNotification
-from src.ui.widgets.premium_badge import PremiumBadge
 from src.ui.themes.theme_manager import cycle_theme
-from src.utils.logger import logger
+from src.ui.widgets.premium_badge import PremiumBadge
+from src.ui.widgets.toast import ToastNotification
+from src.utils.constants import APP_AUTHOR, APP_CNPJ, APP_ORG
+from src.utils.excel_export import export_books_to_excel, export_readers_to_excel
+from src.utils.isbn_api import set_isbn
+from src.utils.validators import validate_book, validate_reader
 
 
 class HomeScreen(QMainWindow):
@@ -239,7 +251,7 @@ class HomeScreen(QMainWindow):
         for spine in ax2.spines.values():
             spine.set_color("#0f3460")
         loans_stats = LoansCRUD.get_stats()
-        bars = ax2.bar(
+        ax2.bar(
             ["Ativos", "Devolvidos", "Atrasados"],
             [loans_stats["active"], loans_stats["returned"], loans_stats["overdue"]],
             color=["#5CE1E6", "#2ecc71", "#e74c3c"],

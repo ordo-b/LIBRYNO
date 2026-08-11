@@ -1,12 +1,19 @@
 """Testes unitários para validators."""
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.utils.validators import (
-    validate_name, validate_username, validate_password,
-    validate_password_match, validate_email, validate_cpf,
-    validate_required_fields, validate_book, validate_reader,
+    validate_book,
+    validate_cpf,
+    validate_email,
+    validate_name,
+    validate_password,
+    validate_password_match,
+    validate_reader,
+    validate_required_fields,
+    validate_username,
 )
 
 

@@ -1,7 +1,7 @@
 """Gerenciamento de licença premium via OrdoB com verificação de assinatura."""
-import time
 import threading
-from typing import Optional, Tuple
+import time
+
 from src.auth.ordob_client import client
 from src.auth.session import session
 from src.utils.logger import logger
@@ -14,10 +14,10 @@ class LicenseManager:
 
     def __init__(self):
         self._last_check = 0.0
-        self._check_thread: Optional[threading.Thread] = None
+        self._check_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
 
-    def validate_license(self, license_key: str) -> Tuple[bool, str]:
+    def validate_license(self, license_key: str) -> tuple[bool, str]:
         """Valida uma chave de licença OrdoB Premium."""
         result = client.validate_license(license_key)
         if result is None:
@@ -121,7 +121,7 @@ class LicenseManager:
 _license_manager = LicenseManager()
 
 
-def validate_license(license_key: str) -> Tuple[bool, str]:
+def validate_license(license_key: str) -> tuple[bool, str]:
     """Valida uma chave de licença."""
     return _license_manager.validate_license(license_key)
 
@@ -138,7 +138,7 @@ def deactivate_license():
     logger.info("License deactivated")
 
 
-def get_license_info() -> Optional[dict]:
+def get_license_info() -> dict | None:
     """Retorna informações da licença atual."""
     if not session.is_premium or not session.license_key:
         return None

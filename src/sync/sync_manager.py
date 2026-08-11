@@ -2,7 +2,7 @@
 import threading
 import time
 from datetime import datetime
-from typing import Optional
+
 from src.auth.ordob_client import client
 from src.auth.session import session
 from src.core.database import DatabaseSession
@@ -20,7 +20,7 @@ class SyncManager:
     """
 
     def __init__(self):
-        self._sync_thread: Optional[threading.Thread] = None
+        self._sync_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
         self._last_sync = 0.0
         self._sync_interval = 300

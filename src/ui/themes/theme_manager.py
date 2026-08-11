@@ -1,6 +1,8 @@
 """Gerenciador de temas visuais com detecção automática do sistema."""
 from pathlib import Path
+
 from PySide6 import QtWidgets
+
 from src.utils.logger import logger
 from src.utils.system_theme import get_system_theme
 

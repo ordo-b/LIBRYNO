@@ -1,6 +1,7 @@
 """Validações de dados de entrada."""
 import re
-from src.utils.constants import MIN_NAME_LEN, MIN_USERNAME_LEN, MIN_PASSWORD_LEN
+
+from src.utils.constants import MIN_NAME_LEN, MIN_PASSWORD_LEN, MIN_USERNAME_LEN
 
 
 def validate_name(name: str) -> tuple[bool, str]:
