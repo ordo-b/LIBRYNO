@@ -1,9 +1,11 @@
 """Exportação de dados para Excel."""
 from pathlib import Path
+
 import pandas as pd
-from src.utils.logger import logger
+
 from src.features.books import BooksCRUD
 from src.features.readers import ReadersCRUD
+from src.utils.logger import logger
 
 
 def export_books_to_excel(filepath: str) -> bool:

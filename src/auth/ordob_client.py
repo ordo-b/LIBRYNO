@@ -1,10 +1,10 @@
 """Cliente HTTP para a API OrdoB Core."""
-import json
-import time
 import threading
-from typing import Optional, Callable
-from urllib.parse import urljoin
+import time
+from collections.abc import Callable
+
 import requests
+
 from src.config import Config
 from src.utils.logger import logger
 
@@ -33,7 +33,7 @@ class OrdoBClient:
     def clear_token(self):
         self.session.headers.pop("Authorization", None)
 
-    def _request_with_retry(self, method: str, url: str, **kwargs) -> Optional[requests.Response]:
+    def _request_with_retry(self, method: str, url: str, **kwargs) -> requests.Response | None:
         """Executa requisição HTTP com retry exponencial e backoff."""
         kwargs.setdefault("timeout", self.TIMEOUT)
         for attempt in range(self.MAX_RETRIES):
@@ -73,7 +73,7 @@ class OrdoBClient:
             return {"online": True, "latency_ms": int((time.time() - start) * 1000)}
         return {"online": False, "latency_ms": 0}
 
-    def login(self, email: str, password: str) -> Optional[dict]:
+    def login(self, email: str, password: str) -> dict | None:
         try:
             resp = self._request_with_retry(
                 "POST",
@@ -92,7 +92,7 @@ class OrdoBClient:
             return None
 
     def register(self, name: str, email: str, password: str,
-                 phone: str = "", company: str = "", document: str = "") -> Optional[dict]:
+                 phone: str = "", company: str = "", document: str = "") -> dict | None:
         try:
             payload = {"name": name, "email": email, "password": password}
             if phone:
@@ -131,7 +131,7 @@ class OrdoBClient:
             self.clear_token()
             return False
 
-    def get_user(self, token: str) -> Optional[dict]:
+    def get_user(self, token: str) -> dict | None:
         try:
             self.set_token(token)
             resp = self._request_with_retry("GET", f"{self.base_url}/v1/user")
@@ -142,7 +142,7 @@ class OrdoBClient:
             logger.error("Get user error: {}", e)
             return None
 
-    def validate_license(self, license_key: str) -> Optional[dict]:
+    def validate_license(self, license_key: str) -> dict | None:
         try:
             resp = self._request_with_retry(
                 "POST",
@@ -161,7 +161,7 @@ class OrdoBClient:
             logger.error("License validation error: {}", e)
             return None
 
-    def get_licenses(self, token: str) -> Optional[list]:
+    def get_licenses(self, token: str) -> list | None:
         try:
             self.set_token(token)
             resp = self._request_with_retry("GET", f"{self.base_url}/v1/licenses")
@@ -173,7 +173,7 @@ class OrdoBClient:
             return None
 
     def create_ticket(self, token: str, subject: str, description: str,
-                      category: str = "suporte", priority: str = "media") -> Optional[dict]:
+                      category: str = "suporte", priority: str = "media") -> dict | None:
         try:
             self.set_token(token)
             resp = self._request_with_retry(

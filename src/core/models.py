@@ -1,9 +1,18 @@
 """Modelos do banco de dados SQLite."""
 from datetime import datetime
+
 from sqlalchemy import (
-    Column, Integer, String, Float, Boolean, Text, ForeignKey, DateTime
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
+
 from src.core.database import Base
 
 

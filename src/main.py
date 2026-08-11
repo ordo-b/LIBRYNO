@@ -1,6 +1,6 @@
 """Ponto de entrada do LIBRYNO v2.0."""
-import sys
 import os
+import sys
 
 # Garante que o diretório raiz está no path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

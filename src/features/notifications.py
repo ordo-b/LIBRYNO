@@ -1,6 +1,4 @@
 """Sistema de notificações locais (PREMIUM)."""
-from datetime import datetime
-from typing import Optional
 from src.core.database import DatabaseSession
 from src.core.models import Notification
 from src.utils.logger import logger
@@ -8,7 +6,7 @@ from src.utils.logger import logger
 
 class NotificationsCRUD:
     @staticmethod
-    def create(titulo: str, mensagem: str, tipo: str = "system") -> Optional[Notification]:
+    def create(titulo: str, mensagem: str, tipo: str = "system") -> Notification | None:
         try:
             with DatabaseSession() as session:
                 notif = Notification(titulo=titulo, mensagem=mensagem, tipo=tipo)

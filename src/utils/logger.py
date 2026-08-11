@@ -1,6 +1,7 @@
 """Configuração de logging com loguru."""
 import sys
 from pathlib import Path
+
 from loguru import logger
 
 LOG_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "logs"

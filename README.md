@@ -135,7 +135,7 @@ Ciclo de temas com botão na sidebar:
 
 ## Tecnologias
 
-- **GUI**: PyQt5
+- **GUI**: PySide6 (Qt for Python)
 - **Database**: SQLite via SQLAlchemy
 - **Auth**: OrdoB Core API
 - **Charts**: Matplotlib

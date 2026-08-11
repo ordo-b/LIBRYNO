@@ -1,6 +1,5 @@
 """Migrações e setup do banco de dados."""
-from src.core.database import init_database
-from src.core.database import DatabaseSession
+from src.core.database import DatabaseSession, init_database
 from src.core.models import Collaborator
 from src.utils.crypto import hash_password
 from src.utils.logger import logger

@@ -1,5 +1,4 @@
 """Detecção automática de tema do sistema operacional."""
-from typing import Optional
 
 try:
     import darkdetect
@@ -8,7 +7,7 @@ except ImportError:
     HAS_DARKDETECT = False
 
 
-def get_system_theme() -> Optional[str]:
+def get_system_theme() -> str | None:
     """
     Detecta o tema do sistema operacional.
     Retorna 'dark' ou 'light', ou None se não detectado.

@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+
 from src.utils.logger import logger
 
 I18N_DIR = Path(__file__).parent

@@ -1,8 +1,10 @@
 """Cliente SSE (Server-Sent Events) para notificações em tempo real."""
 import threading
 import time
+from collections.abc import Callable
+
 import requests
-from typing import Callable, Optional
+
 from src.utils.logger import logger
 
 
@@ -22,14 +24,14 @@ class SSEClient:
         token: str,
         endpoint: str,
         on_message: Callable,
-        on_error: Optional[Callable] = None,
+        on_error: Callable | None = None,
     ):
         self.base_url = base_url
         self.token = token
         self.endpoint = endpoint
         self.on_message = on_message
         self.on_error = on_error
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
         self._stop_event = threading.Event()
         self._last_heartbeat = time.time()
         self._delay = self.RECONNECT_DELAY

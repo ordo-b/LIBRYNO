@@ -1,5 +1,5 @@
 """CRUD de Colaboradores."""
-from typing import Optional
+
 from src.core.database import DatabaseSession
 from src.core.models import Collaborator
 from src.utils.crypto import hash_password, verify_password
@@ -9,7 +9,7 @@ from src.utils.logger import logger
 class CollaboratorsCRUD:
     @staticmethod
     def create(nome: str, nome_usuario: str, senha: str,
-               role: str = "collaborator") -> Optional[Collaborator]:
+               role: str = "collaborator") -> Collaborator | None:
         try:
             with DatabaseSession() as session:
                 collab = Collaborator(

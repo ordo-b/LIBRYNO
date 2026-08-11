@@ -1,17 +1,22 @@
 """Sistema de empréstimos de livros (PREMIUM)."""
 from datetime import datetime, timedelta
-from typing import Optional
-from sqlalchemy import or_
+
 from src.core.database import DatabaseSession
-from src.core.models import Loan, Book, Reader
-from src.utils.constants import DEFAULT_LOAN_DAYS, FINE_PER_DAY, LOAN_STATUS_ACTIVE, LOAN_STATUS_RETURNED, LOAN_STATUS_OVERDUE
+from src.core.models import Book, Loan, Reader
+from src.utils.constants import (
+    DEFAULT_LOAN_DAYS,
+    FINE_PER_DAY,
+    LOAN_STATUS_ACTIVE,
+    LOAN_STATUS_OVERDUE,
+    LOAN_STATUS_RETURNED,
+)
 from src.utils.logger import logger
 
 
 class LoansCRUD:
     @staticmethod
     def create(book_id: int, reader_id: int, days: int = DEFAULT_LOAN_DAYS,
-               notes: str = "") -> Optional[Loan]:
+               notes: str = "") -> Loan | None:
         try:
             with DatabaseSession() as session:
                 book = session.query(Book).filter_by(id=book_id).first()
@@ -68,7 +73,7 @@ class LoansCRUD:
             return False, 0.0
 
     @staticmethod
-    def read_all(status: Optional[str] = None) -> list[dict]:
+    def read_all(status: str | None = None) -> list[dict]:
         try:
             with DatabaseSession() as session:
                 query = session.query(Loan)

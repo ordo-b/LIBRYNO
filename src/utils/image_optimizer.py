@@ -3,8 +3,6 @@
 Analisa todas as imagens em img/ e gera relatório de otimização.
 """
 from pathlib import Path
-from src.utils.logger import logger
-
 
 IMG_DIR = Path(__file__).resolve().parent.parent.parent / "img"
 

@@ -1,16 +1,23 @@
 """Tela de Login - Integrada com OrdoB API."""
-from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6 import QtGui
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QMessageBox, QFrame,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-from src.config import Config
+
+from src.auth.license import check_existing_license
 from src.auth.ordob_client import client
 from src.auth.session import session
-from src.auth.license import check_existing_license
+from src.config import Config
 from src.ui.i18n.translator import t
-from src.utils.logger import logger
 
 
 class LoginScreen(QMainWindow):

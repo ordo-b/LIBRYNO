@@ -1,6 +1,7 @@
 """CRUD de Livros."""
-from typing import Optional
+
 from sqlalchemy import or_
+
 from src.core.database import DatabaseSession
 from src.core.models import Book
 from src.utils.logger import logger
@@ -11,7 +12,7 @@ class BooksCRUD:
     def create(n_tombo: str, isbn: str = "", editora: str = "", ano_edicao: str = "",
                classificacao: str = "", n_folhas: str = "", titulo: str = "",
                autor: str = "", volume: str = "", data_cadastro: str = "",
-               assunto: str = "") -> Optional[Book]:
+               assunto: str = "") -> Book | None:
         try:
             with DatabaseSession() as session:
                 book = Book(

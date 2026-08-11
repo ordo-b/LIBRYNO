@@ -1,6 +1,6 @@
 """Catalogação avançada de livros (PREMIUM)."""
 import json
-from typing import Optional
+
 from src.core.database import DatabaseSession
 from src.core.models import Book
 from src.utils.logger import logger
