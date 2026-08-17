@@ -1,7 +1,7 @@
 {
-  "name": "Libryno — Gestão de Biblioteca Pública",
+  "name": "Libryno — Gestão de Biblioteca",
   "short_name": "Libryno",
-  "description": "Sistema gratuito e open-source da OrdoB para gestão de bibliotecas públicas.",
+  "description": "Sistema gratuito e open-source da OrdoB para gestão de bibliotecas.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

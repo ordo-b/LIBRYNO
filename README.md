@@ -1,6 +1,6 @@
 # LIBRYNO v2.0
 
-Sistema de Gestão de Biblioteca Pública integrado ao ecossistema **OrdoB**.
+Sistema de Gestão de Biblioteca integrado ao ecossistema **OrdoB**.
 
 ## Instalação
 

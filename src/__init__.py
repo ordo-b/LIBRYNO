@@ -2,7 +2,7 @@
 LIBRYNO v2.0 - Sistema de Gestão de Biblioteca
 ==============================================
 
-Sistema desktop para gerenciamento de bibliotecas públicas,
+Sistema desktop para gerenciamento de bibliotecas,
 desenvolvido com PySide6 e integrado ao ecossistema OrdoB.
 
 Funcionalidades:
