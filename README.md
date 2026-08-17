@@ -7,19 +7,19 @@ Sistema de Gestão de Biblioteca integrado ao ecossistema **OrdoB**.
 ### Opção 1: Executável Pronto (Recomendado)
 
 #### Windows
-1. Acesse a [página de releases no GitHub](https://github.com/anomalyco/libryno/releases)
+1. Acesse a [página de releases no GitHub](https://github.com/OrdoB/Libryno/releases)
 2. Baixe o arquivo `Libryno-Setup.exe`
 3. Execute o instalador e siga as instruções
 
 #### Linux
 ```bash
 # Via instalador (Debian/Ubuntu)
-wget https://github.com/anomalyco/libryno/releases/download/v2.0.0/libryno-linux-x64.deb
+wget https://github.com/OrdoB/Libryno/releases/download/v2.0.0/libryno-linux-x64.deb
 sudo dpkg -i libryno-linux-x64.deb
 sudo apt install -f  # Corrige dependências
 
 # Via AppImage (qualquer distribuição)
-wget https://github.com/anomalyco/libryno/releases/download/v2.0.0/libryno-linux-x64.AppImage
+wget https://github.com/OrdoB/Libryno/releases/download/v2.0.0/libryno-linux-x64.AppImage
 chmod +x libryno-linux-x64.AppImage
 ./libryno-linux-x64.AppImage
 ```
@@ -28,7 +28,7 @@ chmod +x libryno-linux-x64.AppImage
 
 ```bash
 # Clone o repositório
-git clone https://github.com/anomalyco/libryno.git
+git clone https://github.com/OrdoB/Libryno.git
 cd libryno
 
 # Instale as dependências
