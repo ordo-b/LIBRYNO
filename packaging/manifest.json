@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0a090d",
-  "theme_color": "#0f3460",
+  "theme_color": "#0a090d",
   "lang": "pt-BR",
   "categories": ["education", "productivity"],
   "icons": [

@@ -30,8 +30,10 @@
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0f3460" />
+    <meta name="theme-color" content="#0a090d" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Libryno" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -63,8 +65,7 @@
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Início", "item": "https://libryno.ordob.com/" },
-        { "@type": "ListItem", "position": 2, "name": "Download", "item": "https://libryno.ordob.com/#download" },
-        { "@type": "ListItem", "position": 3, "name": "GitHub", "item": "https://github.com/anomalyco/libryno" }
+        { "@type": "ListItem", "position": 2, "name": "Download", "item": "https://libryno.ordob.com/#download" }
       ]
     }
     </script>
@@ -159,6 +160,9 @@
       .grid-3 {
         display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
       }
+      .how-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+      }
       .card {
         background: rgba(255,255,255,.03);
         border: 1px solid rgba(255,255,255,.1);
@@ -222,9 +226,11 @@
       /* Responsive */
       @media (max-width: 768px) {
         .hero h1 { font-size: 2.5rem; }
-        .grid-3, .download-grid, .footer-grid { grid-template-columns: 1fr; }
+        .grid-3, .how-grid, .download-grid, .footer-grid { grid-template-columns: 1fr; }
         .hero-actions { flex-direction: column; align-items: center; }
         .stats { gap: 30px; }
+        nav a { margin-left: 18px; font-size: 14px; }
+        .header-container { padding: 0 16px; }
       }
     </style>
   </head>
@@ -240,7 +246,7 @@
         <nav>
           <a href="#recursos">Recursos</a>
           <a href="#download">Download</a>
-          <a href="https://github.com/anomalyco/libryno" target="_blank">GitHub</a>
+          <a href="https://github.com/WesleyAlvesDS/LIBRYNO" target="_blank" rel="noopener noreferrer">GitHub</a>
           <a href="https://ordob.com">OrdoB</a>
         </nav>
       </div>
@@ -260,7 +266,7 @@
 
         <div class="hero-actions">
           <a href="#download" class="btn btn-primary">📥 Download Grátis</a>
-          <a href="https://github.com/anomalyco/libryno" class="btn-ghost">Ver no GitHub →</a>
+          <a href="https://github.com/WesleyAlvesDS/LIBRYNO" class="btn-ghost">Ver no GitHub →</a>
         </div>
 
         <div class="hero-badges">
@@ -270,7 +276,7 @@
     </section>
 
     <!-- Features -->
-    <section class="section section-alt">
+    <section id="recursos" class="section section-alt">
       <h2 class="section-title">Tudo que você precisa em um único lugar</h2>
       <p class="section-subtitle">
         Do acervo ao empréstimo: o Libryno reúne tudo que uma biblioteca precisa
@@ -336,7 +342,7 @@
 
     <!-- Como funciona -->
     <section class="section">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;" class="grid-3">
+      <div class="how-grid">
         <div style="max-width: 500px; margin: 0 auto;">
           <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 20px; text-align: left;">
             Simples e intuitivo
@@ -373,7 +379,7 @@
           </div>
         </div>
 
-        <div style="border-radius: 20px; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 40px 80px rgba(0,0,0,.4); background: linear-gradient(135deg, #0f3460 0%, #151419 100%);; padding: 40px; text-align: center;">
+        <div style="border-radius: 20px; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 40px 80px rgba(0,0,0,.4); background: linear-gradient(135deg, #0f3460 0%, #151419 100%); padding: 40px; text-align: center;">
           <div style="font-family: monospace; font-size: 13px; color: #5CE1E6; margin-bottom: 20px;"># Dashboard do Libryno</div>
           <div style="text-align: left; font-family: monospace; font-size: 12px; color: #a0a0a0; line-height: 1.8;">
             $ libryno --dashboard<br /><br />
@@ -415,7 +421,7 @@
       </p>
 
       <div class="download-grid" style="max-width: 800px; margin: 0 auto;">
-        <a href="https://github.com/anomalyco/libryno/releases/latest/download/Libryno-Setup.exe" class="download-btn">
+        <a href="https://github.com/WesleyAlvesDS/LIBRYNO/releases/latest/download/Libryno-Setup.exe" class="download-btn">
           <img src="https://cdn-icons-png.flaticon.com/512/732/732168.png" alt="Windows" class="os-icon" />
           <div style="display: flex; flex-direction: column;">
             <span style="font-weight: 600; color: #e4e3ea;">Windows</span>
@@ -423,7 +429,7 @@
           </div>
         </a>
 
-        <a href="https://github.com/anomalyco/libryno/releases/latest/download/libryno-linux-x64.deb" class="download-btn">
+        <a href="https://github.com/WesleyAlvesDS/LIBRYNO/releases/latest/download/libryno-linux-x64.deb" class="download-btn">
           <img src="https://cdn-icons-png.flaticon.com/512/2628/2628037.png" alt="Linux" class="os-icon" />
           <div style="display: flex; flex-direction: column;">
             <span style="font-weight: 600; color: #e4e3ea;">Linux .deb</span>
@@ -431,7 +437,7 @@
           </div>
         </a>
 
-        <a href="https://github.com/anomalyco/libryno/releases/latest/download/libryno-linux-x64.AppImage" class="download-btn">
+        <a href="https://github.com/WesleyAlvesDS/LIBRYNO/releases/latest/download/libryno-linux-x64.AppImage" class="download-btn">
           <img src="https://cdn-icons-png.flaticon.com/512/2628/2628037.png" alt="Linux AppImage" class="os-icon" />
           <div style="display: flex; flex-direction: column;">
             <span style="font-weight: 600; color: #e4e3ea;">AppImage</span>
@@ -445,7 +451,7 @@
           <strong>Instale via Git:</strong>
         </p>
         <code style="background: rgba(0,0,0,.3); padding: 8px 16px; border-radius: 8px; display: inline-block;">
-          git clone https://github.com/anomalyco/libryno.git
+          git clone https://github.com/WesleyAlvesDS/LIBRYNO.git
         </code>
       </div>
     </section>
@@ -469,17 +475,17 @@
             <ul class="footer-links">
               <li><a href="#recursos">Recursos</a></li>
               <li><a href="#download">Download</a></li>
-              <li><a href="https://github.com/anomalyco/libryno" target="_blank">GitHub</a></li>
-              <li><a href="https://github.com/anomalyco/libryno/releases" target="_blank">Releases</a></li>
+              <li><a href="https://github.com/WesleyAlvesDS/LIBRYNO" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+              <li><a href="https://github.com/WesleyAlvesDS/LIBRYNO/releases" target="_blank" rel="noopener noreferrer">Releases</a></li>
             </ul>
           </div>
 
           <div class="footer-col">
             <h4>Recursos</h4>
             <ul class="footer-links">
-              <li><a href="https://github.com/anomalyco/libryno" target="_blank">Documentação</a></li>
-              <li><a href="https://github.com/anomalyco/libryno#readme" target="_blank">Guia de Uso</a></li>
-              <li><a href="https://github.com/anomalyco/libryno/blob/main/LICENSE" target="_blank">Licença</a></li>
+              <li><a href="https://github.com/WesleyAlvesDS/LIBRYNO" target="_blank" rel="noopener noreferrer">Documentação</a></li>
+              <li><a href="https://github.com/WesleyAlvesDS/LIBRYNO#readme" target="_blank" rel="noopener noreferrer">Guia de Uso</a></li>
+              <li><a href="https://github.com/WesleyAlvesDS/LIBRYNO/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Licença</a></li>
             </ul>
           </div>
 
