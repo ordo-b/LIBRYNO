@@ -22,7 +22,7 @@ a = Analysis(
         'src.core.models',
         'src.core.migrations',
         'src.core.seed',
-             'src.auth',
+        'src.auth',
         'src.auth.ordob_client',
         'src.auth.session',
         'src.auth.license',
