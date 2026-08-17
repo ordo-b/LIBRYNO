@@ -829,9 +829,10 @@ class HomeScreen(QMainWindow):
             f"{t('about.version')}: {Config.APP_VERSION}",
             f"{t('about.developer')}: {APP_AUTHOR}",
             f"{t('about.library')}: {APP_ORG}",
-            f"{t('about.cnpj')}: {APP_CNPJ}",
             f"{t('about.license')}: Apache License 2.0",
         ]
+        if APP_CNPJ:
+            info_lines.insert(3, f"{t('about.cnpj')}: {APP_CNPJ}")
         for line in info_lines:
             lbl = QLabel(line)
             lbl.setAlignment(Qt.AlignCenter)

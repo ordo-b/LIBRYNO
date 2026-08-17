@@ -1,9 +1,9 @@
 """Constantes do aplicativo LIBRYNO."""
 
 APP_FULL_NAME = "LIBRYNO - Sistema de Gestão de Biblioteca"
-APP_AUTHOR = "Wesley Alves"
-APP_ORG = "Biblioteca Pública Municipal Maria Margarida Liguori"
-APP_CNPJ = "28606630/0001-23"
+APP_AUTHOR = "OrdoB"
+APP_ORG = "OrdoB"
+APP_CNPJ = ""
 
 MIN_NAME_LEN = 3
 MIN_USERNAME_LEN = 3

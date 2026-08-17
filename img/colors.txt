@@ -1,3 +1,0 @@
-#242424 cinza-escuro
-#5CE1E6 ciano
-#cae8ff azul-clarinho

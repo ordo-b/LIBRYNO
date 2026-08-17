@@ -21,7 +21,7 @@ Funcionalidades:
 - Sincronização bidirecional com a nuvem
 - Login via Google OAuth
 
-Autor: Wesley Alves
-Instituição: Biblioteca Pública Municipal Maria Margarida Liguori
+Autor: OrdoB
+Empresa: OrdoB
 Licença: Apache License 2.0
 """

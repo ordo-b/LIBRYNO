@@ -149,4 +149,4 @@ Apache License 2.0
 
 ---
 
-Desenvolvido por **OrdoB** Nova Friburgo/RJ
+Desenvolvido por **OrdoB**
