@@ -1,5 +1,9 @@
 """Tela Principal - Dashboard + CRUD + Features."""
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import os
+
+os.environ.setdefault("QT_API", "pyside6")
+
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PySide6 import QtGui
 from PySide6.QtCore import Qt
@@ -53,7 +57,7 @@ class HomeScreen(QMainWindow):
         self.login_screen = login_screen
         self.setWindowTitle(t("home.title"))
         self.setMinimumSize(1100, 650)
-        self.setWindowIcon(QtGui.QIcon("img/icon.png"))
+        self.setWindowIcon(QtGui.QIcon(Config.resource_path("img/icon.png")))
         self.current_nav = 0
         self.autenticado_colab = False
         self._build_ui()

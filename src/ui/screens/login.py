@@ -26,7 +26,7 @@ class LoginScreen(QMainWindow):
         self.on_success = on_success
         self.setWindowTitle(t("login.title"))
         self.setFixedSize(700, 450)
-        self.setWindowIcon(QtGui.QIcon("img/icon.png"))
+        self.setWindowIcon(QtGui.QIcon(Config.resource_path("img/icon.png")))
         self._build_ui()
 
     def _build_ui(self):

@@ -1,10 +1,19 @@
 """Configurações centralizadas do LIBRYNO."""
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+IS_FROZEN = getattr(sys, "frozen", False)
+
+if IS_FROZEN:
+    BASE_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
+    _DATA_ROOT = Path(os.environ.get("APPDATA") or (Path.home() / ".config")) / "Libryno"
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    _DATA_ROOT = BASE_DIR
+
 ENV_FILE = BASE_DIR / ".env"
 
 if ENV_FILE.exists():
@@ -12,8 +21,8 @@ if ENV_FILE.exists():
 else:
     load_dotenv(BASE_DIR / ".env.example")
 
-DATA_DIR = BASE_DIR / "data"
-DATA_DIR.mkdir(exist_ok=True)
+DATA_DIR = _DATA_ROOT / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class Config:
@@ -42,3 +51,9 @@ class Config:
         if cls.APP_DEBUG:
             return cls.ORDOB_API_URL_DEV
         return cls.ORDOB_API_URL
+
+    @staticmethod
+    def resource_path(relative: str) -> str:
+        """Resolve caminho de recurso (funciona em dev e empacotado)."""
+        base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
+        return str(base / relative)

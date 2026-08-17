@@ -24,6 +24,8 @@ from src.ui.themes.theme_manager import (
 from src.utils.logger import logger
 
 _sse_stop_event = None
+_main_window = None
+_login_window = None
 
 
 def run():
@@ -32,7 +34,7 @@ def run():
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName(Config.APP_NAME)
     app.setApplicationVersion(Config.APP_VERSION)
-    app.setWindowIcon(QtGui.QIcon("img/icon.png"))
+    app.setWindowIcon(QtGui.QIcon(Config.resource_path("img/icon.png")))
 
     _load_locale("pt_BR")
     _load_locale("en")
@@ -43,26 +45,31 @@ def run():
     setup_database()
     seed_demo_data()
 
+    global _main_window, _login_window
+
     if session.is_authenticated:
         logger.info("Existing session found, verifying license...")
         check_existing_license()
         start_license_monitoring()
         _start_realtime_notifications()
         sync_manager.sync_start(Config.SYNC_INTERVAL)
-        home = HomeScreen()
-        home.show()
+        _main_window = HomeScreen()
+        _main_window.show()
     else:
-        login = LoginScreen(on_success=lambda: _show_home(login))
-        login.show()
+        _login_window = LoginScreen(on_success=_show_home)
+        _login_window.show()
 
     atexit.register(cleanup)
     sys.exit(app.exec_())
 
 
-def _show_home(login_screen):
-    global _sse_stop_event
-    home = HomeScreen(login_screen=login_screen)
-    home.show()
+def _show_home():
+    global _sse_stop_event, _main_window, _login_window
+    if _login_window:
+        _login_window.close()
+        _login_window = None
+    _main_window = HomeScreen()
+    _main_window.show()
     start_license_monitoring()
     _sse_stop_event = _start_realtime_notifications()
     sync_manager.sync_start(Config.SYNC_INTERVAL)
