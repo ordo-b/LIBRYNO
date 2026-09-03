@@ -1,9 +1,15 @@
-"""CRUD de Leitores."""
+"""CRUD de Leitores.
+
+FREE tier: até FREE_MAX_READERS leitores.
+Acima disso, create() retorna None e emite aviso.
+"""
 
 from sqlalchemy import or_
 
+from src.auth.session import session
 from src.core.database import DatabaseSession
 from src.core.models import Reader
+from src.utils.constants import FREE_MAX_READERS
 from src.utils.logger import logger
 
 
@@ -13,15 +19,25 @@ class ReadersCRUD:
                identidade: str = "", cep: str = "", escolaridade: str = "",
                data_nascimento: str = "", endereco: str = "",
                data_cadastro: str = "") -> Reader | None:
+        # ─── FREE TIER LIMIT CHECK ───
+        if not session.is_premium:
+            current_count = ReadersCRUD.count()
+            if current_count >= FREE_MAX_READERS:
+                logger.warning(
+                    "FREE tier limit reached ({}/{} readers) — upgrade required",
+                    current_count, FREE_MAX_READERS,
+                )
+                return None
+
         try:
-            with DatabaseSession() as session:
+            with DatabaseSession() as session_db:
                 reader = Reader(
                     nome=nome, telefone=telefone, email=email, cpf=cpf,
                     identidade=identidade, cep=cep, escolaridade=escolaridade,
                     data_nascimento=data_nascimento, endereco=endereco,
                     data_cadastro=data_cadastro,
                 )
-                session.add(reader)
+                session_db.add(reader)
                 logger.info("Reader created: {} - CPF: {}", nome, cpf)
                 return reader
         except Exception as e:
@@ -31,8 +47,8 @@ class ReadersCRUD:
     @staticmethod
     def read_all() -> list[dict]:
         try:
-            with DatabaseSession() as session:
-                readers = session.query(Reader).order_by(Reader.id.asc()).all()
+            with DatabaseSession() as session_db:
+                readers = session_db.query(Reader).order_by(Reader.id.asc()).all()
                 return [
                     {
                         "id": r.id, "nome": r.nome, "telefone": r.telefone,
@@ -50,8 +66,8 @@ class ReadersCRUD:
     @staticmethod
     def update(reader_id: int, **kwargs) -> bool:
         try:
-            with DatabaseSession() as session:
-                reader = session.query(Reader).filter_by(id=reader_id).first()
+            with DatabaseSession() as session_db:
+                reader = session_db.query(Reader).filter_by(id=reader_id).first()
                 if not reader:
                     return False
                 for key, value in kwargs.items():
@@ -66,11 +82,11 @@ class ReadersCRUD:
     @staticmethod
     def delete(reader_id: int) -> bool:
         try:
-            with DatabaseSession() as session:
-                reader = session.query(Reader).filter_by(id=reader_id).first()
+            with DatabaseSession() as session_db:
+                reader = session_db.query(Reader).filter_by(id=reader_id).first()
                 if not reader:
                     return False
-                session.delete(reader)
+                session_db.delete(reader)
                 logger.info("Reader deleted: {}", reader_id)
                 return True
         except Exception as e:
@@ -80,9 +96,9 @@ class ReadersCRUD:
     @staticmethod
     def search(term: str) -> list[dict]:
         try:
-            with DatabaseSession() as session:
+            with DatabaseSession() as session_db:
                 like = f"%{term}%"
-                readers = session.query(Reader).filter(
+                readers = session_db.query(Reader).filter(
                     or_(Reader.nome.ilike(like), Reader.cpf.ilike(like))
                 ).all()
                 return [
@@ -102,7 +118,7 @@ class ReadersCRUD:
     @staticmethod
     def count() -> int:
         try:
-            with DatabaseSession() as session:
-                return session.query(Reader).count()
+            with DatabaseSession() as session_db:
+                return session_db.query(Reader).count()
         except Exception:
             return 0

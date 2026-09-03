@@ -2,29 +2,30 @@
   "app_name": "LIBRYNO",
   "login": {
     "title": "LIBRYNO - Login",
-    "email": "Email",
-    "password": "Password",
+    "email": "OrdoB account email",
+    "email_placeholder": "your@email.com",
+    "password": "OrdoB account password",
+    "password_placeholder": "Enter your password",
     "enter": "Sign In",
-    "register": "Create Account",
-    "forgot_password": "Forgot password?",
-    "login_with_ordob": "Sign in with OrdoB",
+    "login_with_ordob": "Authentication via OrdoB",
+    "auth_required": "⚠️ OrdoB account required.\nWithout it, Libryno won't work.\nSign up at ordob.com/cadastro",
+    "no_account_info": "Don't have an OrdoB account? Create one for free at ordob.com/cadastro, then come back to sign in.",
+    "create_account_ordob": "Create OrdoB Account",
+    "create_account_info": "Create your free account at:\nhttps://ordob.com/cadastro\n\nAfter signing up, return to Libryno and sign in.",
+    "forgot_password": "Forgot my password",
+    "remember_email": "Remember this email",
+    "checking_server": "Checking server...",
+    "server_online": "Server online ✓",
+    "server_offline": "Server offline ✗",
+    "authenticating": "Authenticating...",
     "success": "Login successful!",
-    "error": "Invalid email or password.",
-    "offline_warning": "Offline mode - using local data"
-  },
-  "register": {
-    "title": "LIBRYNO - OrdoB Registration",
-    "name": "Full name",
-    "email": "Email",
-    "password": "Password",
-    "confirm_password": "Confirm password",
-    "phone": "Phone",
-    "company": "Company/Organization",
-    "document": "CPF/CNPJ",
-    "register": "Register",
-    "back": "Back",
-    "success": "Account created successfully!",
-    "error": "Error creating account."
+    "error": "Invalid email or password.\nCheck your OrdoB credentials.",
+    "server_unreachable": "OrdoB server unreachable.\n\nLibryno requires a connection to the OrdoB API to work.\nCheck your internet and try again.",
+    "exit_title": "Exit LIBRYNO",
+    "exit_confirm": "Do you really want to exit?\n\nLibryno requires authentication to work.",
+    "login_via_browser": "🔐 Login via Browser",
+    "browser_auth_info": "1. Open OrdoB in your browser and log in\n2. Copy the API token from the settings page\n3. Paste the token in the dialog below\n\nCallback URL:\n{callback_url}\n\nOr use the email/password form on the left.",
+    "browser_auth_timeout": "Timeout.\nPlease sign in again via email/password or try browser login."
   },
   "home": {
     "title": "LIBRYNO - Home",
@@ -64,7 +65,8 @@
     "export_excel": "Export Excel",
     "export_pdf": "Export PDF",
     "search_isbn": "Search by ISBN",
-    "isbn_placeholder": "Enter ISBN for auto-fill"
+    "isbn_placeholder": "Enter ISBN for auto-fill",
+    "free_limit_reached": "FREE plan limit reached ({}/{} books).\nUpgrade to PREMIUM on OrdoB to remove the limit."
   },
   "readers": {
     "title": "Reader Management",
@@ -85,7 +87,8 @@
     "update": "Update",
     "delete": "Delete",
     "export_excel": "Export Excel",
-    "export_pdf": "Export PDF"
+    "export_pdf": "Export PDF",
+    "free_limit_reached": "FREE plan limit reached ({}/{} readers).\nUpgrade to PREMIUM on OrdoB to remove the limit."
   },
   "collaborators": {
     "title": "Collaborator Management",
@@ -100,7 +103,8 @@
     "update": "Update",
     "delete": "Delete",
     "change_password": "Change Password",
-    "sensitive_area": "Sensitive area - password required"
+    "sensitive_area": "Sensitive area - password required",
+    "free_limit_reached": "FREE plan limit reached ({}/{} collaborators).\nUpgrade to PREMIUM on OrdoB to remove the limit."
   },
   "loans": {
     "title": "Book Loans",
@@ -118,7 +122,7 @@
     "active": "Active",
     "returned": "Returned",
     "overdue": "Overdue",
-    "premium_required": "This feature is available for Premium users only"
+    "premium_required": "This feature is available for Premium users only.\nUpgrade at ordob.com"
   },
   "reports": {
     "title": "Reports",
@@ -127,7 +131,7 @@
     "loans_report": "Loans Report",
     "generate": "Generate Report",
     "save_pdf": "Save as PDF",
-    "premium_required": "Advanced reports available for Premium only"
+    "premium_required": "Advanced reports available for Premium only.\nUpgrade at ordob.com"
   },
   "notifications": {
     "title": "Notifications",
@@ -135,7 +139,7 @@
     "mark_all_read": "Mark all as read",
     "delete": "Delete",
     "no_notifications": "No notifications",
-    "premium_required": "Notifications available for Premium only"
+    "premium_required": "Notifications available for Premium only.\nUpgrade at ordob.com"
   },
   "backup": {
     "title": "Backup",
@@ -143,7 +147,7 @@
     "restore_backup": "Restore Backup",
     "list_backups": "Backup List",
     "delete_backup": "Delete Backup",
-    "premium_required": "Backup available for Premium only"
+    "premium_required": "Backup available for Premium only.\nUpgrade at ordob.com"
   },
   "about": {
     "title": "About LIBRYNO",
@@ -162,7 +166,7 @@
     "confirm_action": "Confirm action",
     "fields_required": "All required fields must be filled",
     "operation_cancelled": "Operation cancelled",
-    "connection_error": "Server connection error",
+    "connection_error": "OrdoB server connection error",
     "data_saved": "Data saved successfully",
     "data_deleted": "Data deleted successfully",
     "data_updated": "Data updated successfully"

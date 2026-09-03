@@ -2,29 +2,36 @@
   "app_name": "LIBRYNO",
   "login": {
     "title": "LIBRYNO - Login",
-    "email": "Email",
-    "password": "Senha",
+    "email": "Email da conta OrdoB",
+    "email_placeholder": "seu@email.com",
+    "password": "Senha da conta OrdoB",
+    "password_placeholder": "Digite sua senha",
     "enter": "Entrar",
-    "register": "Criar Conta",
-    "forgot_password": "Esqueceu a senha?",
-    "login_with_ordob": "Entrar com OrdoB",
+    "login_with_ordob": "Autenticação via OrdoB",
+    "auth_required": "⚠️ Conta OrdoB obrigatória.\nSem ela, o Libryno não funciona.\nCadastre-se em ordob.com/cadastro",
+    "no_account_info": "Não tem conta OrdoB? Cadastre-se gratuitamente em ordob.com/cadastro e volte para fazer login.",
+    "create_account_ordob": "Criar conta no OrdoB",
+    "create_account_info": "Crie sua conta gratuita em:\nhttps://ordob.com/cadastro\n\nApós o cadastro, volte ao Libryno e faça login.",
+    "forgot_password": "Esqueci minha senha",
+    "remember_email": "Lembrar este email",
+    "checking_server": "Verificando servidor...",
+    "server_online": "Servidor online ✓",
+    "server_offline": "Servidor offline ✗",
+    "authenticating": "Autenticando...",
     "success": "Login realizado com sucesso!",
-    "error": "Email ou senha inválidos.",
-    "offline_warning": "Modo offline - usando dados locais"
-  },
-  "register": {
-    "title": "LIBRYNO - Registro OrdoB",
-    "name": "Nome completo",
-    "email": "Email",
-    "password": "Senha",
-    "confirm_password": "Confirmar senha",
-    "phone": "Telefone",
-    "company": "Empresa/Organização",
-    "document": "CPF/CNPJ",
-    "register": "Cadastrar",
-    "back": "Voltar",
-    "success": "Conta criada com sucesso!",
-    "error": "Erro ao criar conta."
+    "error": "Email ou senha inválidos.\nVerifique suas credenciais OrdoB.",
+    "server_unreachable": "Servidor OrdoB inacessível.\n\nO Libryno precisa de conexão com a API OrdoB para funcionar.\nVerifique sua internet e tente novamente.",
+    "exit_title": "Sair do LIBRYNO",
+    "exit_confirm": "Deseja realmente sair?\n\nO Libryno requer autenticação para funcionar.",
+    "login_via_browser": "🔐 Login via Navegador",
+    "browser_auth_info": "1. Abra o OrdoB no navegador e faça login\n2. Copie o token de API na página de configurações\n3. Cole o token na caixa de diálogo abaixo\n\nURL de callback:\n{callback_url}\n\nOu use o campo de email/senha ao lado.",
+    "browser_auth_timeout": "Tempo esgotado.\nFaça login novamente via email/senha ou tente o login via navegador.",
+    "import_paste": "📥 Importar por Cola",
+    "import_paste_info": "Cole dados copiados de uma planilha. Plano FREE: até 20 linhas.",
+    "premium_promo_welcome": "💡 Dica: Você está usando o plano FREE.\nDesbloqueie todos os recursos com o Premium!",
+    "premium_promo_limit": "📊 Você está no limite!\nUpgrade para Premium e tenha ilimitado.",
+    "premium_promo_feature": "🔒 Este recurso é Premium.\nAtive sua chave OrdoB para acessar.",
+    "premium_promo_import": "📥 Importação concluída!\nCom Premium, importe Excel e muito mais."
   },
   "home": {
     "title": "LIBRYNO - Home",
@@ -64,7 +71,8 @@
     "export_excel": "Exportar Excel",
     "export_pdf": "Exportar PDF",
     "search_isbn": "Buscar por ISBN",
-    "isbn_placeholder": "Digite o ISBN para auto-preenchimento"
+    "isbn_placeholder": "Digite o ISBN para auto-preenchimento",
+    "free_limit_reached": "Limite do plano FREE atingido ({}/{} livros).\nFaça upgrade para PREMIUM no OrdoB para remover o limite."
   },
   "readers": {
     "title": "Gerenciamento de Leitores",
@@ -85,7 +93,8 @@
     "update": "Atualizar",
     "delete": "Excluir",
     "export_excel": "Exportar Excel",
-    "export_pdf": "Exportar PDF"
+    "export_pdf": "Exportar PDF",
+    "free_limit_reached": "Limite do plano FREE atingido ({}/{} leitores).\nFaça upgrade para PREMIUM no OrdoB para remover o limite."
   },
   "collaborators": {
     "title": "Gerenciamento de Colaboradores",
@@ -100,7 +109,8 @@
     "update": "Atualizar",
     "delete": "Excluir",
     "change_password": "Alterar Senha",
-    "sensitive_area": "Área sensível - senha necessária"
+    "sensitive_area": "Área sensível - senha necessária",
+    "free_limit_reached": "Limite do plano FREE atingido ({}/{} colaboradores).\nFaça upgrade para PREMIUM no OrdoB para remover o limite."
   },
   "loans": {
     "title": "Empréstimos de Livros",
@@ -118,7 +128,7 @@
     "active": "Ativo",
     "returned": "Devolvido",
     "overdue": "Atrasado",
-    "premium_required": "Recurso disponível apenas para usuários Premium"
+    "premium_required": "Recurso disponível apenas para usuários Premium.\nFaça upgrade em ordob.com"
   },
   "reports": {
     "title": "Relatórios",
@@ -127,7 +137,7 @@
     "loans_report": "Relatório de Empréstimos",
     "generate": "Gerar Relatório",
     "save_pdf": "Salvar como PDF",
-    "premium_required": "Relatórios avançados disponíveis apenas para Premium"
+    "premium_required": "Relatórios avançados disponíveis apenas para Premium.\nFaça upgrade em ordob.com"
   },
   "notifications": {
     "title": "Notificações",
@@ -135,7 +145,7 @@
     "mark_all_read": "Marcar todas como lidas",
     "delete": "Excluir",
     "no_notifications": "Nenhuma notificação",
-    "premium_required": "Notificações disponíveis apenas para Premium"
+    "premium_required": "Notificações disponíveis apenas para Premium.\nFaça upgrade em ordob.com"
   },
   "backup": {
     "title": "Backup",
@@ -143,7 +153,7 @@
     "restore_backup": "Restaurar Backup",
     "list_backups": "Lista de Backups",
     "delete_backup": "Excluir Backup",
-    "premium_required": "Backup disponível apenas para Premium"
+    "premium_required": "Backup disponível apenas para Premium.\nFaça upgrade em ordob.com"
   },
   "about": {
     "title": "Sobre o LIBRYNO",
@@ -162,7 +172,7 @@
     "confirm_action": "Confirmar ação",
     "fields_required": "Todos os campos obrigatórios devem ser preenchidos",
     "operation_cancelled": "Operação cancelada",
-    "connection_error": "Erro de conexão com o servidor",
+    "connection_error": "Erro de conexão com o servidor OrdoB",
     "data_saved": "Dados salvos com sucesso",
     "data_deleted": "Dados excluídos com sucesso",
     "data_updated": "Dados atualizados com sucesso"

@@ -1,196 +1,48 @@
-# LIBRYNO v2.0
+# Libryno
 
-Sistema de Gestão de Biblioteca integrado ao ecossistema **OrdoB**.
+[![Libryno](https://img.shields.io/badge/Libryno-v2.0-5CE1E6?style=for-the-badge&logo=python&logoColor=white)](#)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](#)
+[![PySide6](https://img.shields.io/badge/PySide6-6.5+-41CD52?style=for-the-badge&logo=qt&logoColor=white)](#)
 
-## ⚠️ Autenticação Obrigatória
+Sistema Desktop e robusto de **Gestão de Biblioteca Pública**, desenvolvido nativamente em Python com uma GUI moderna e integrado perfeitamente ao ecossistema cloud **OrdoB**.
 
-**O Libryno SÓ funciona com autenticação via API OrdoB.**
+## 🚀 Destaques do Projeto (Para Recrutadores e Engenheiros)
 
-Qualquer usuário que execute o aplicativo DEVE fazer login com uma conta OrdoB válida. Não existe modo offline ou acesso sem autenticação.
+O **Libryno** demonstra versatilidade e o uso eficiente de aplicações nativas Desktop comunicando-se com serviços em nuvem. 
 
-### Fluxo de autenticação
+- **Autenticação Híbrida (Desktop/Cloud):** Utiliza um fluxo rigoroso de checagem. A aplicação local valida a sessão do usuário via API RESTful do *OrdoB Core*. A integridade dos dados locais do usuário ativo é validada utilizando assinaturas **HMAC-SHA256**.
+- **Modelagem Relacional Offline-First:** Usa SQLite (local) orquestrado pelo poderoso **SQLAlchemy** (ORM). Traz excelente performance de I/O em máquinas limitadas típicas de organizações públicas.
+- **Integração de APIs Acessórias:** Faz comunicação externa para captura de metadados literários via *Consulta de ISBN Automática* e integra geração rica de arquivos, transformando base de dados em relatórios PDF e exportações Excel (Pandas + ReportLab).
+- **Interface Gráfica Nativa (GUI):** Desenvolvido utilizando o robusto PySide6 (bindings oficiais do framework Qt), oferecendo uma interface reativa, assíncrona, multithread e visualmente polida (Dark/Light themes).
 
-```
-App inicia
-    ↓
-Sessão salva existe?
-├── SIM → Validar token no servidor OrdoB
-│         ├── Token válido → Liberar acesso
-│         ├── Token expirado → Forçar re-login
-│         └── API inacessível → Bloquear acesso + aviso
-└── NÃO → Exibir tela de login OrdoB
-```
+## 🛠️ Stack Tecnológica
 
-### Regras de segurança
+| Componente | Tecnologia |
+|------------|------------|
+| **GUI** | PySide6 (Qt for Python) |
+| **Database** | SQLite + SQLAlchemy (ORM) |
+| **SSO & Licença**| OrdoB Core API (via Requests) |
+| **Data Eng.** | Matplotlib (Charts) + Pandas (Excel) |
+| **Build & Deploy**| PyInstaller |
+| **Segurança** | bcrypt (Criptografia local), HMAC-SHA256 (Anti-tampering) |
 
-- Sessão local é protegida por assinatura HMAC-SHA256
-- Sessão adulterada é automaticamente descartada
-- Token é validado contra a API a cada hora
-- Se token expirar, usuário é deslogado automaticamente
+## 📦 Estrutura e Features
 
----
+- **Tiers de Acesso dinâmico:** Controle por chaves no backend (FREE tier possui limitação de inserts mapeada e tratada graciosamente na GUI, PREMIUM ativa logs de relatórios completos e destrava bloqueios).
+- **Empréstimos, Leitores e Livros:** Controle rigoroso de estoque literário, tracking de empréstimos, retornos e geração automatizada de multas por atraso.
+- **Notificações Realtime (SSE):** O Desktop consegue receber e disparar notificações assíncronas do backend remoto utilizando *Server-Sent Events*.
 
-## Planos
+## 🔧 Executando a partir da Fonte
 
-### Tier FREE (gratuito)
-- Login via OrdoB
-- CRUD de Livros (até **50 livros**)
-- CRUD de Leitores (até **50 leitores**)
-- CRUD de Colaboradores (até **3 colaboradores**)
-- Dashboard com gráficos
-- Busca global multi-tabela
-- Exportação para Excel (até **3/dia**)
-- Consulta ISBN automática
-- Tema escuro/claro
-
-### Tier PREMIUM (Chave OrdoB)
-- Tudo do FREE + **sem limites de registros**
-- Sistema de empréstimos com multas
-- Relatórios avançados em PDF
-- Multi-usuário com permissões
-- Backup automático
-- Notificações em tempo real (SSE)
-- Catalogação com tags e capas
-- Importação de planilhas
-- 5+ temas visuais
-- Sem anúncios
-- Suporte prioritário
-
-### Limites do FREE tier
-
-| Recurso | FREE | PREMIUM |
-|---------|------|---------|
-| Livros | 50 | Ilimitado |
-| Leitores | 50 | Ilimitado |
-| Colaboradores | 3 | Ilimitado |
-| Exportações/dia | 3 | Ilimitado |
-| Empréstimos | ❌ | ✅ |
-| Relatórios PDF | ❌ | ✅ |
-| Backup | ❌ | ✅ |
-| Notificações SSE | ❌ | ✅ |
-| Importação planilhas | ❌ | ✅ |
-
----
-
-## Instalação
-
-### Opção 1: Executável Pronto (Recomendado)
-
-#### Windows
-1. Acesse a [página de releases no GitHub](https://github.com/OrdoB/Libryno/releases)
-2. Baixe o arquivo `Libryno-Setup.exe`
-3. Execute o instalador e siga as instruções
-
-#### Linux
+Requisitos: Python 3.10+
 ```bash
-# Via instalador (Debian/Ubuntu)
-wget https://github.com/OrdoB/Libryno/releases/download/v2.0.0/libryno-linux-x64.deb
-sudo dpkg -i libryno-linux-x64.deb
-sudo apt install -f
-
-# Via AppImage (qualquer distribuição)
-wget https://github.com/OrdoB/Libryno/releases/download/v2.0.0/libryno-linux-x64.AppImage
-chmod +x libryno-linux-x64.AppImage
-./libryno-linux-x64.AppImage
-```
-
-### Opção 2: Via Git (Código Fonte)
-
-```bash
-git clone https://github.com/OrdoB/Libryno.git
+git clone https://github.com/ordo-b/LIBRYNO.git
 cd LIBRYNO
 pip install -r requirements.txt
 cp .env.example .env
 python src/main.py
 ```
-
-### Opção 3: Build Local
-
-```bash
-pip install pyinstaller
-make build        # Linux
-build.bat         # Windows
-```
-
-### Requisitos
-
-- Python 3.10+
-- pip
-- (Para build) PyInstaller 5.10+
+*(Testes inclusos, rode via `pytest`)*
 
 ---
-
-## Estrutura do Projeto
-
-```
-src/
-├── main.py              # Ponto de entrada
-├── app.py               # Bootstrap + auth enforcement
-├── config.py            # Configurações
-├── core/
-│   ├── database.py      # SQLite + SQLAlchemy
-│   ├── models.py        # Modelos de dados
-│   ├── migrations.py    # Setup do banco
-│   └── seed.py          # Dados demo (após auth)
-├── auth/
-│   ├── ordob_client.py  # Cliente API OrdoB (retry + SSE)
-│   ├── session.py       # Sessão com HMAC anti-tampering
-│   └── license.py       # Validação licença + token
-├── features/
-│   ├── books.py         # CRUD Livros (com FREE tier check)
-│   ├── readers.py       # CRUD Leitores (com FREE tier check)
-│   ├── collaborators.py # CRUD Colaboradores
-│   ├── loans.py         # Empréstimos (PREMIUM)
-│   ├── reports.py       # Relatórios PDF (PREMIUM)
-│   ├── notifications.py # Notificações (PREMIUM)
-│   ├── backup.py        # Backup (PREMIUM)
-│   ├── catalog.py       # Catalogação (PREMIUM)
-│   └── import_data.py   # Importação de planilhas
-├── sync/
-│   └── sync_manager.py  # Sincronização bidirecional
-├── ui/
-│   ├── screens/
-│   │   ├── login.py     # Tela de login OrdoB
-│   │   └── home.py      # Dashboard + CRUD
-│   ├── widgets/
-│   │   ├── premium_badge.py
-│   │   └── toast.py
-│   ├── themes/
-│   │   ├── dark.qss
-│   │   ├── light.qss
-│   │   └── theme_manager.py
-│   └── i18n/
-│       ├── pt_BR.json
-│       ├── en.json
-│       └── translator.py
-└── utils/
-    ├── constants.py     # Constantes + limites FREE/PREMIUM
-    ├── crypto.py        # bcrypt
-    ├── excel_export.py
-    ├── isbn_api.py
-    ├── logger.py        # loguru
-    ├── sse_client.py
-    ├── system_theme.py
-    └── validators.py
-```
-
----
-
-## Tecnologias
-
-- **GUI**: PySide6 (Qt for Python)
-- **Database**: SQLite via SQLAlchemy
-- **Auth**: OrdoB Core API (SSO obrigatório)
-- **Charts**: Matplotlib
-- **PDF**: ReportLab
-- **Excel**: Pandas + openpyxl
-- **Build**: PyInstaller
-- **Security**: bcrypt + HMAC-SHA256 session signing
-
-## Licença
-
-Apache License 2.0
-
----
-
-Desenvolvido por **OrdoB**
+*Parte do portfólio de engenharia OrdoB: prova competência no universo Python, Qt e integrações Desktop-Cloud.*

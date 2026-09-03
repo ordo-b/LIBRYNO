@@ -1,7 +1,13 @@
-"""CRUD de Colaboradores."""
+"""CRUD de Colaboradores.
 
+FREE tier: até FREE_MAX_COLLABORATORS colaboradores.
+Acima disso, create() retorna None e emite aviso.
+"""
+
+from src.auth.session import session
 from src.core.database import DatabaseSession
 from src.core.models import Collaborator
+from src.utils.constants import FREE_MAX_COLLABORATORS
 from src.utils.crypto import hash_password, verify_password
 from src.utils.logger import logger
 
@@ -10,15 +16,25 @@ class CollaboratorsCRUD:
     @staticmethod
     def create(nome: str, nome_usuario: str, senha: str,
                role: str = "collaborator") -> Collaborator | None:
+        # ─── FREE TIER LIMIT CHECK ───
+        if not session.is_premium:
+            current_count = CollaboratorsCRUD.count()
+            if current_count >= FREE_MAX_COLLABORATORS:
+                logger.warning(
+                    "FREE tier limit reached ({}/{} collaborators) — upgrade required",
+                    current_count, FREE_MAX_COLLABORATORS,
+                )
+                return None
+
         try:
-            with DatabaseSession() as session:
+            with DatabaseSession() as session_db:
                 collab = Collaborator(
                     nome=nome,
                     nome_usuario=nome_usuario,
                     senha_hash=hash_password(senha),
                     role=role,
                 )
-                session.add(collab)
+                session_db.add(collab)
                 logger.info("Collaborator created: {}", nome_usuario)
                 return collab
         except Exception as e:
@@ -28,8 +44,8 @@ class CollaboratorsCRUD:
     @staticmethod
     def authenticate(nome_usuario: str, senha: str) -> bool:
         try:
-            with DatabaseSession() as session:
-                collab = session.query(Collaborator).filter_by(
+            with DatabaseSession() as session_db:
+                collab = session_db.query(Collaborator).filter_by(
                     nome_usuario=nome_usuario
                 ).first()
                 if collab and verify_password(senha, collab.senha_hash):
@@ -45,8 +61,8 @@ class CollaboratorsCRUD:
     def read_all(safe: bool = True) -> list[dict]:
         """safe=True omite hashes de senha."""
         try:
-            with DatabaseSession() as session:
-                collabs = session.query(Collaborator).order_by(Collaborator.id.asc()).all()
+            with DatabaseSession() as session_db:
+                collabs = session_db.query(Collaborator).order_by(Collaborator.id.asc()).all()
                 return [
                     {
                         "id": c.id, "nome": c.nome,
@@ -63,8 +79,8 @@ class CollaboratorsCRUD:
     @staticmethod
     def update(collab_id: int, **kwargs) -> bool:
         try:
-            with DatabaseSession() as session:
-                collab = session.query(Collaborator).filter_by(id=collab_id).first()
+            with DatabaseSession() as session_db:
+                collab = session_db.query(Collaborator).filter_by(id=collab_id).first()
                 if not collab:
                     return False
                 if "senha" in kwargs:
@@ -81,11 +97,11 @@ class CollaboratorsCRUD:
     @staticmethod
     def delete(collab_id: int) -> bool:
         try:
-            with DatabaseSession() as session:
-                collab = session.query(Collaborator).filter_by(id=collab_id).first()
+            with DatabaseSession() as session_db:
+                collab = session_db.query(Collaborator).filter_by(id=collab_id).first()
                 if not collab:
                     return False
-                session.delete(collab)
+                session_db.delete(collab)
                 logger.info("Collaborator deleted: {}", collab_id)
                 return True
         except Exception as e:
@@ -95,16 +111,16 @@ class CollaboratorsCRUD:
     @staticmethod
     def count() -> int:
         try:
-            with DatabaseSession() as session:
-                return session.query(Collaborator).count()
+            with DatabaseSession() as session_db:
+                return session_db.query(Collaborator).count()
         except Exception:
             return 0
 
     @staticmethod
     def change_password(nome_usuario: str, new_password: str) -> bool:
         try:
-            with DatabaseSession() as session:
-                collab = session.query(Collaborator).filter_by(
+            with DatabaseSession() as session_db:
+                collab = session_db.query(Collaborator).filter_by(
                     nome_usuario=nome_usuario
                 ).first()
                 if not collab:

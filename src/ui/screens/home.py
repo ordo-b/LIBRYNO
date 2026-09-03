@@ -27,6 +27,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from PySide6.QtCore import QTimer
+
 from src.auth.license import validate_license
 from src.auth.session import session
 from src.config import Config
@@ -35,6 +37,7 @@ from src.features.collaborators import CollaboratorsCRUD
 from src.features.import_data import export_template, import_books, import_readers
 from src.features.loans import LoansCRUD
 from src.features.notifications import NotificationsCRUD
+from src.features.premium_promo import promo_manager
 from src.features.readers import ReadersCRUD
 from src.features.reports import (
     generate_books_report,
@@ -42,10 +45,15 @@ from src.features.reports import (
     generate_readers_report,
 )
 from src.ui.i18n.translator import t
+from src.ui.screens.import_paste import ImportPasteScreen
 from src.ui.themes.theme_manager import cycle_theme
 from src.ui.widgets.premium_badge import PremiumBadge
+from src.ui.widgets.premium_promo import PremiumPromoToast
 from src.ui.widgets.toast import ToastNotification
-from src.utils.constants import APP_AUTHOR, APP_CNPJ, APP_ORG
+from src.utils.constants import (
+    APP_AUTHOR, APP_CNPJ, APP_ORG,
+    FREE_MAX_BOOKS, FREE_MAX_COLLABS, FREE_MAX_READERS,
+)
 from src.utils.excel_export import export_books_to_excel, export_readers_to_excel
 from src.utils.isbn_api import set_isbn
 from src.utils.validators import validate_book, validate_reader
@@ -64,6 +72,12 @@ class HomeScreen(QMainWindow):
         self._connect_signals()
         self._update_premium_badge()
         self._navigate(0)
+        # Premium promo system
+        self._promo_toast = PremiumPromoToast(self)
+        self._promo_timer = QTimer(self)
+        self._promo_timer.timeout.connect(self._check_promos)
+        self._promo_timer.start(30000)  # Verifica a cada 30s
+        promo_manager.reset_session()
 
     def _build_ui(self):
         central = QWidget()
@@ -627,7 +641,7 @@ class HomeScreen(QMainWindow):
 
     def _new_loan(self):
         if not session.is_premium:
-            QMessageBox.information(self, t("home.premium"), t("loans.premium_required"))
+            self._promo_toast.show_feature_gate("Empréstimos de Livros")
             return
 
         books = BooksCRUD.read_all()
@@ -658,7 +672,7 @@ class HomeScreen(QMainWindow):
 
     def _return_loan(self):
         if not session.is_premium:
-            QMessageBox.information(self, t("home.premium"), t("loans.premium_required"))
+            self._promo_toast.show_feature_gate("Devolução de Livros")
             return
 
         row = self.table_loans.currentRow()
@@ -872,6 +886,37 @@ class HomeScreen(QMainWindow):
     def _connect_signals(self):
         pass
 
+    # ---- Premium Promo System ----
+
+    def _check_promos(self):
+        """Verifica se deve mostrar promoção."""
+        if session.is_premium:
+            self._promo_timer.stop()
+            return
+
+        if promo_manager.should_show_initial_promo():
+            self._promo_toast.show_welcome_tip()
+        elif promo_manager.should_show_usage_promo():
+            usage = promo_manager.get_usage_percentage()
+            for entity, pct in usage.items():
+                if pct >= 80:
+                    limit_map = {
+                        "livros": FREE_MAX_BOOKS,
+                        "leitores": FREE_MAX_READERS,
+                        "colaboradores": FREE_MAX_COLLABS,
+                    }
+                    count_map = {
+                        "livros": lambda: BooksCRUD.count(),
+                        "leitores": lambda: ReadersCRUD.count(),
+                        "colaboradores": lambda: CollaboratorsCRUD.count(),
+                    }
+                    self._promo_toast.show_limit_reached(
+                        entity,
+                        count_map[entity](),
+                        limit_map[entity],
+                    )
+                    break
+
     def _do_search(self):
         term = self.input_search.text().strip()
         if not term:
@@ -905,11 +950,20 @@ class HomeScreen(QMainWindow):
 
     def _import_data(self, entity_type):
         if not session.is_premium:
-            QMessageBox.information(
-                self, t("home.premium"),
-                "Importação de planilhas é um recurso Premium.\n"
-                "Ative sua chave OrdoB para acessar."
+            # Mostrar opção de import por cola (FREE com limite)
+            reply = QMessageBox.question(
+                self,
+                t("home.premium"),
+                "📥 Importação de arquivo Excel/CSV é Premium.\n\n"
+                "Mas você pode importar copiando e colando dados!\n"
+                "(Plano FREE: até 20 linhas)\n\n"
+                "Deseja usar a importação por cola?",
+                QMessageBox.Yes | QMessageBox.No,
             )
+            if reply == QMessageBox.Yes:
+                self._import_paste(entity_type)
+            else:
+                self._promo_toast.show_feature_gate("Importação de Planilhas")
             return
 
         filepath, _ = QFileDialog.getOpenFileName(
@@ -960,6 +1014,26 @@ class HomeScreen(QMainWindow):
                 + "\n".join(result.errors[:5])
             )
 
+    def _import_paste(self, entity_type):
+        """Abre tela de importação por cola."""
+        self._import_screen = ImportPasteScreen(
+            entity_type=entity_type,
+            on_complete=lambda: self._on_import_complete(entity_type),
+        )
+        self._import_screen.setWindowTitle(f"Importar {entity_type}")
+        self._import_screen.resize(700, 500)
+        self._import_screen.show()
+
+    def _on_import_complete(self, entity_type):
+        """Callback após importação bem-sucedida."""
+        if entity_type == "books":
+            self._refresh_books_table()
+        else:
+            self._refresh_readers_table()
+        # Mostrar teaser Premium após importação
+        if not session.is_premium:
+            QTimer.singleShot(2000, self._promo_toast.show_import_teaser)
+
     def _export_template(self, entity_type):
         filepath, _ = QFileDialog.getSaveFileName(
             self,
@@ -982,7 +1056,7 @@ class HomeScreen(QMainWindow):
 
     def _show_notifications(self):
         if not session.is_premium:
-            QMessageBox.information(self, t("home.premium"), t("notifications.premium_required"))
+            self._promo_toast.show_feature_gate("Notificações")
             return
         notifs = NotificationsCRUD.read_all()
         if not notifs:

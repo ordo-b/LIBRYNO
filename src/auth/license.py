@@ -62,6 +62,25 @@ class LicenseManager:
 
         return False
 
+    def validate_session_token(self) -> bool:
+        """
+        Valida se o token de sessão ainda é válido no servidor OrdoB.
+        Retorna True se válido, False se expirado/revogado.
+        """
+        if not session.token:
+            return False
+
+        user_data = client.get_user(session.token)
+        if user_data is None:
+            logger.warning("Token validation failed — API unreachable")
+            return False
+
+        # Atualizar dados do usuário com os mais recentes do servidor
+        session._user = user_data
+        session._save_session()
+        logger.info("Token validated successfully for: {}", session.user_email)
+        return True
+
     def periodic_check_start(self):
         """Inicia verificação periódica de licença em background."""
         if self._check_thread and self._check_thread.is_alive():
@@ -79,6 +98,16 @@ class LicenseManager:
         """Loop de verificação periódica da licença."""
         while not self._stop_event.is_set():
             try:
+                # 1) Validar token de sessão
+                if session.token:
+                    if not self.validate_session_token():
+                        logger.warning(
+                            "Session token expired/invalid — logging out"
+                        )
+                        session.logout()
+                        continue
+
+                # 2) Validar licença
                 if session.license_key:
                     result = client.validate_license(session.license_key)
                     if result and result.get("valid"):
@@ -131,6 +160,51 @@ def check_existing_license() -> bool:
     return _license_manager.check_existing_license()
 
 
+def auto_detect_premium() -> bool:
+    """Detecta automaticamente se a conta OrdoB tem licença Premium.
+    
+    Chamado após login bem-sucedido.
+    Consulta a API OrdoB para verificar se existem licenças ativas
+    para o produto Libryno. Se encontrar, ativa premium automaticamente.
+    """
+    if session.is_premium:
+        return True  # Já é premium
+    
+    if not session.token:
+        return False
+    
+    try:
+        licenses = client.get_licenses(session.token)
+        if not licenses:
+            logger.info("No licenses found for user")
+            return False
+        
+        # Procurar licença ativa para o produto libryno
+        for lic in licenses:
+            product = lic.get("product", "")
+            status = lic.get("status", "")
+            license_key = lic.get("key", "")
+            
+            if (product == Config.ORDOB_PRODUCT_SLUG 
+                    and status in ("active", "trial") 
+                    and license_key):
+                logger.info("Auto-detected active license: {} (status: {})", 
+                           license_key[:8] + "...", status)
+                session.set_premium(True, license_key)
+                return True
+        
+        logger.info("No active license found for product: {}", Config.ORDOB_PRODUCT_SLUG)
+        return False
+    except Exception as e:
+        logger.warning("Auto-detect premium failed: {}", e)
+        return False
+
+
+def validate_session_token() -> bool:
+    """Valida se o token de sessão ainda é válido no servidor."""
+    return _license_manager.validate_session_token()
+
+
 def deactivate_license():
     """Remove a licença premium da sessão."""
     session.set_premium(False)
@@ -159,4 +233,3 @@ def start_license_monitoring():
 def stop_license_monitoring():
     """Para o monitoramento de licença."""
     _license_manager.periodic_check_stop()
-
