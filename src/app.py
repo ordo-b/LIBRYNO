@@ -1,13 +1,28 @@
-"""Bootstrap do aplicativo LIBRYNO v2.0."""
+"""Bootstrap do aplicativo LIBRYNO v2.0.
+
+╔══════════════════════════════════════════════════════════════════╗
+║  REGRAS DE AUTENTICAÇÃO OBRIGATÓRIAS                           ║
+║                                                                  ║
+║  1. O Libryno SÓ funciona com login via API OrdoB.              ║
+║  2. NÃO existe modo offline — API deve estar acessível.         ║
+║  3. NÃO existe cadastro/registro dentro do Libryno.             ║
+║  4. Conta OrdoB é criada em ordob.com/cadastro.                 ║
+║  5. Dados locais (livros, leitores) ficam APENAS na máquina.    ║
+║  6. Token é validado no startup e a cada hora.                   ║
+╚══════════════════════════════════════════════════════════════════╝
+"""
 import atexit
 import sys
 
 from PySide6 import QtGui, QtWidgets
+from PySide6.QtWidgets import QMessageBox
 
 from src.auth.license import (
+    auto_detect_premium,
     check_existing_license,
     start_license_monitoring,
     stop_license_monitoring,
+    validate_session_token,
 )
 from src.auth.ordob_client import client
 from src.auth.session import session
@@ -26,41 +41,124 @@ from src.utils.logger import logger
 _sse_stop_event = None
 _main_window = None
 _login_window = None
+_app = None
 
 
 def run():
+    global _app
     logger.info("LIBRYNO v{} starting...", Config.APP_VERSION)
 
-    app = QtWidgets.QApplication(sys.argv)
-    app.setApplicationName(Config.APP_NAME)
-    app.setApplicationVersion(Config.APP_VERSION)
-    app.setWindowIcon(QtGui.QIcon(Config.resource_path("img/icon.png")))
+    _app = QtWidgets.QApplication(sys.argv)
+    _app.setApplicationName(Config.APP_NAME)
+    _app.setApplicationVersion(Config.APP_VERSION)
+    _app.setWindowIcon(QtGui.QIcon(Config.resource_path("img/icon.png")))
 
     _load_locale("pt_BR")
     _load_locale("en")
     set_locale("pt_BR")
 
-    apply_system_theme(app)
+    apply_system_theme(_app)
 
     setup_database()
-    seed_demo_data()
 
-    global _main_window, _login_window
-
+    # ─── AUTH: Verificar sessão salva primeiro ───
+    # Se há token salvo, validar contra API antes de mostrar login.
     if session.is_authenticated:
-        logger.info("Existing session found, verifying license...")
-        check_existing_license()
-        start_license_monitoring()
-        _start_realtime_notifications()
-        sync_manager.sync_start(Config.SYNC_INTERVAL)
-        _main_window = HomeScreen()
-        _main_window.show()
-    else:
-        _login_window = LoginScreen(on_success=_show_home)
-        _login_window.show()
+        logger.info("Found saved session, validating...")
+        if _validate_saved_session():
+            logger.info("Session valid — auto-login")
+            _on_auth_success()
+            atexit.register(cleanup)
+            sys.exit(_app.exec_())
+        else:
+            logger.info("Session invalid — showing login")
+            session.logout()
+
+    # Sem sessão válida — mostrar login
+    _show_login()
 
     atexit.register(cleanup)
-    sys.exit(app.exec_())
+    sys.exit(_app.exec_())
+
+
+def _validate_saved_session() -> bool:
+    """Valida token salvo contra a API OrdoB (silencioso)."""
+    if not session.token:
+        return False
+
+    # Verificar conectividade primeiro
+    if not client.health_check():
+        logger.warning("API unreachable — cannot validate saved session")
+        return False
+
+    # Validar token
+    return validate_session_token()
+
+
+def _validate_session_or_prompt_login() -> bool:
+    """Valida token salvo — mostra prompt se inválido."""
+    logger.info("Validating saved session token against OrdoB API...")
+
+    if not client.health_check():
+        logger.warning("OrdoB API unreachable during startup validation")
+        reply = QMessageBox.question(
+            None,
+            "Servidor Indisponível",
+            "O servidor OrdoB está inacessível.\n\n"
+            "O LIBRYNO requer autenticação para funcionar.\n"
+            "Deseja tentar novamente?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            return _validate_session_or_prompt_login()
+        else:
+            QMessageBox.critical(
+                None,
+                "Acesso Negado",
+                "LIBRYNO requer conexão com o servidor OrdoB.\n"
+                "O aplicativo será encerrado.",
+            )
+            return False
+
+    if validate_session_token():
+        logger.info("Session token valid — proceeding")
+        _on_auth_success()
+        return True
+    else:
+        logger.warning("Session token invalid/expired — forcing re-login")
+        session.logout()
+        QMessageBox.warning(
+            None,
+            "Sessão Expirada",
+            "Sua sessão expirou ou foi revogada.\n"
+            "Por favor, faça login novamente com sua conta OrdoB.",
+        )
+        return False
+
+
+def _on_auth_success():
+    """Chamado após autenticação bem-sucedida."""
+    global _main_window, _login_window
+
+    # Auto-detectar licença Premium
+    auto_detect_premium()
+    check_existing_license()
+    start_license_monitoring()
+
+    # Seed só roda após autenticação
+    seed_demo_data()
+
+    _main_window = HomeScreen()
+    _main_window.show()
+    _start_realtime_notifications()
+    sync_manager.sync_start(Config.SYNC_INTERVAL)
+
+
+def _show_login():
+    global _login_window
+    _login_window = LoginScreen(on_success=_show_home)
+    _login_window.show()
 
 
 def _show_home():
@@ -68,11 +166,7 @@ def _show_home():
     if _login_window:
         _login_window.close()
         _login_window = None
-    _main_window = HomeScreen()
-    _main_window.show()
-    start_license_monitoring()
-    _sse_stop_event = _start_realtime_notifications()
-    sync_manager.sync_start(Config.SYNC_INTERVAL)
+    _on_auth_success()
 
 
 def _on_notification(data: dict):

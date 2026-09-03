@@ -57,9 +57,12 @@ class OrdoBClient:
         return None
 
     def health_check(self) -> bool:
+        """Verifica se a API OrdoB está acessível."""
         try:
+            # O health check deve acessar /api/health diretamente
+            # NÃO usar .replace('/api', '') que quebra URLs com 'api' no domínio
             resp = requests.get(
-                f"{self.base_url.replace('/api', '')}/api/health",
+                f"{self.base_url}/health",
                 timeout=self.TIMEOUT,
             )
             return resp.status_code == 200
@@ -200,8 +203,13 @@ class OrdoBClient:
         """
         from src.utils.sse_client import SSEClient
 
+        # A URL base para SSE é o domínio sem /api
+        # Ex: https://api.ordob.com/api → https://api.ordob.com
+        base = self.base_url.rstrip('/')
+        if base.endswith('/api'):
+            base = base[:-4]  # remove '/api' do final
         sse = SSEClient(
-            base_url=self.base_url.replace("/api", ""),
+            base_url=base,
             token=token,
             endpoint="/api/v1/notifications/stream",
             on_message=on_message,

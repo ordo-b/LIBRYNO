@@ -1,9 +1,15 @@
-"""CRUD de Livros."""
+"""CRUD de Livros.
+
+FREE tier: até FREE_MAX_BOOKS livros.
+Acima disso, create() retorna None e emite aviso.
+"""
 
 from sqlalchemy import or_
 
+from src.auth.session import session
 from src.core.database import DatabaseSession
 from src.core.models import Book
+from src.utils.constants import FREE_MAX_BOOKS
 from src.utils.logger import logger
 
 
@@ -13,15 +19,25 @@ class BooksCRUD:
                classificacao: str = "", n_folhas: str = "", titulo: str = "",
                autor: str = "", volume: str = "", data_cadastro: str = "",
                assunto: str = "") -> Book | None:
+        # ─── FREE TIER LIMIT CHECK ───
+        if not session.is_premium:
+            current_count = BooksCRUD.count()
+            if current_count >= FREE_MAX_BOOKS:
+                logger.warning(
+                    "FREE tier limit reached ({}/{} books) — upgrade required",
+                    current_count, FREE_MAX_BOOKS,
+                )
+                return None
+
         try:
-            with DatabaseSession() as session:
+            with DatabaseSession() as session_db:
                 book = Book(
                     n_tombo=n_tombo, isbn=isbn, editora=editora,
                     ano_edicao=ano_edicao, classificacao=classificacao,
                     n_folhas=n_folhas, titulo=titulo, autor=autor,
                     volume=volume, data_cadastro=data_cadastro, assunto=assunto,
                 )
-                session.add(book)
+                session_db.add(book)
                 logger.info("Book created: {} - {}", n_tombo, titulo)
                 return book
         except Exception as e:
@@ -31,8 +47,8 @@ class BooksCRUD:
     @staticmethod
     def read_all() -> list[dict]:
         try:
-            with DatabaseSession() as session:
-                books = session.query(Book).order_by(Book.id.asc()).all()
+            with DatabaseSession() as session_db:
+                books = session_db.query(Book).order_by(Book.id.asc()).all()
                 return [
                     {
                         "id": b.id, "n_tombo": b.n_tombo, "isbn": b.isbn,
@@ -50,8 +66,8 @@ class BooksCRUD:
     @staticmethod
     def update(book_id: int, **kwargs) -> bool:
         try:
-            with DatabaseSession() as session:
-                book = session.query(Book).filter_by(id=book_id).first()
+            with DatabaseSession() as session_db:
+                book = session_db.query(Book).filter_by(id=book_id).first()
                 if not book:
                     return False
                 for key, value in kwargs.items():
@@ -66,11 +82,11 @@ class BooksCRUD:
     @staticmethod
     def delete(book_id: int) -> bool:
         try:
-            with DatabaseSession() as session:
-                book = session.query(Book).filter_by(id=book_id).first()
+            with DatabaseSession() as session_db:
+                book = session_db.query(Book).filter_by(id=book_id).first()
                 if not book:
                     return False
-                session.delete(book)
+                session_db.delete(book)
                 logger.info("Book deleted: {}", book_id)
                 return True
         except Exception as e:
@@ -80,9 +96,9 @@ class BooksCRUD:
     @staticmethod
     def search(term: str) -> list[dict]:
         try:
-            with DatabaseSession() as session:
+            with DatabaseSession() as session_db:
                 like = f"%{term}%"
-                books = session.query(Book).filter(
+                books = session_db.query(Book).filter(
                     or_(
                         Book.titulo.ilike(like), Book.autor.ilike(like),
                         Book.isbn.ilike(like), Book.n_tombo.ilike(like),
@@ -107,7 +123,7 @@ class BooksCRUD:
     @staticmethod
     def count() -> int:
         try:
-            with DatabaseSession() as session:
-                return session.query(Book).count()
+            with DatabaseSession() as session_db:
+                return session_db.query(Book).count()
         except Exception:
             return 0

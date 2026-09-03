@@ -1,10 +1,25 @@
 """Gerenciamento de sessão e token do usuário."""
+import hashlib
+import hmac
 import json
+import os
 
 from src.config import DATA_DIR
 from src.utils.logger import logger
 
 SESSION_FILE = DATA_DIR / ".session"
+
+# Chave derivada do ambiente para assinatura HMAC
+_HMAC_KEY = os.environ.get(
+    "LIBRYNO_SESSION_KEY",
+    "libryno-default-session-key-do-not-use-in-prod",
+).encode()
+
+
+def _sign(data: dict) -> str:
+    """Gera assinatura HMAC-SHA256 dos dados da sessão."""
+    payload = json.dumps(data, sort_keys=True, ensure_ascii=False)
+    return hmac.new(_HMAC_KEY, payload.encode(), hashlib.sha256).hexdigest()
 
 
 class Session:
@@ -75,18 +90,40 @@ class Session:
                 "premium": self._premium,
                 "license_key": self._license_key,
             }
-            SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            # Salvar com assinatura HMAC para detectar adulteração
+            signed = {
+                "payload": data,
+                "sig": _sign(data),
+            }
+            SESSION_FILE.write_text(
+                json.dumps(signed, indent=2), encoding="utf-8"
+            )
         except Exception as e:
             logger.error("Failed to save session: {}", e)
 
     def _load_session(self):
         try:
             if SESSION_FILE.exists():
-                data = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
-                self._token = data.get("token")
-                self._user = data.get("user")
-                self._premium = data.get("premium", False)
-                self._license_key = data.get("license_key")
+                raw = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
+
+                # Formato novo: com assinatura HMAC
+                if "payload" in raw and "sig" in raw:
+                    payload = raw["payload"]
+                    expected_sig = _sign(payload)
+                    if not hmac.compare_digest(raw["sig"], expected_sig):
+                        logger.warning(
+                            "Session file TAMPERED — discarding session"
+                        )
+                        self._clear_session_file()
+                        return
+                else:
+                    # Formato antigo (sem assinatura) — aceitar mas re-salvar
+                    payload = raw
+
+                self._token = payload.get("token")
+                self._user = payload.get("user")
+                self._premium = payload.get("premium", False)
+                self._license_key = payload.get("license_key")
                 if self._token:
                     logger.debug("Session restored for: {}", self.user_name)
         except Exception as e:
