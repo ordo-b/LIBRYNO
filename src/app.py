@@ -9,13 +9,15 @@
 ║  4. Conta OrdoB é criada em ordob.com/cadastro.                 ║
 ║  5. Dados locais (livros, leitores) ficam APENAS na máquina.    ║
 ║  6. Token é validado no startup e a cada hora.                   ║
+║  7. Auto-update verifica versão no startup (background).         ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 import atexit
 import sys
 
-from PySide6 import QtGui, QtWidgets
-from PySide6.QtWidgets import QMessageBox
+from PySide6 import QtGui, QtWidgets, QtCore
+from PySide6.QtWidgets import QMessageBox, QProgressDialog
+from PySide6.QtCore import QTimer
 
 from src.auth.license import (
     auto_detect_premium,
@@ -36,6 +38,7 @@ from src.ui.screens.login import LoginScreen
 from src.ui.themes.theme_manager import (
     apply_system_theme,
 )
+from src.updater import auto_updater
 from src.utils.logger import logger
 
 _sse_stop_event = None
@@ -69,6 +72,8 @@ def run():
             logger.info("Session valid — auto-login")
             _on_auth_success()
             atexit.register(cleanup)
+            # Iniciar auto-update check em background após login
+            QTimer.singleShot(3000, _start_background_update_check)
             sys.exit(_app.exec_())
         else:
             logger.info("Session invalid — showing login")
@@ -154,6 +159,9 @@ def _on_auth_success():
     _start_realtime_notifications()
     sync_manager.sync_start(Config.SYNC_INTERVAL)
 
+    # Iniciar verificação de atualizações em background
+    QTimer.singleShot(3000, _start_background_update_check)
+
 
 def _show_login():
     global _login_window
@@ -169,6 +177,122 @@ def _show_home():
     _on_auth_success()
 
 
+def _start_background_update_check():
+    """Inicia verificação de atualizações em background."""
+    if not Config.AUTO_UPDATE_ENABLED:
+        logger.info("Auto-update disabled, skipping check")
+        return
+
+    if not Config.AUTO_UPDATE_ENABLED:
+        return
+
+    logger.info("Starting background update check...")
+    auto_updater.check_and_notify(
+        on_update_available=lambda info: _show_update_available_dialog(info),
+        on_no_update=lambda: logger.info("No updates available"),
+        on_error=lambda reason: logger.warning("Update check failed: {}", reason),
+    )
+
+
+def _show_update_available_dialog(info: dict):
+    """Mostra dialog de atualização disponível."""
+    if _main_window is None:
+        logger.warning("Main window not ready, cannot show update dialog")
+        return
+
+    current = info.get("current_version", "?")
+    latest = info.get("latest_version", "?")
+    notes = info.get("release_notes", "")
+
+    msg = QMessageBox(_main_window)
+    msg.setWindowTitle("Atualização Disponível")
+    msg.setIcon(QMessageBox.Icon.Information)
+    msg.setText(f"Nova versão {latest} disponível! (Atual: {current})")
+    msg.setInformativeText(
+        f"Deseja baixar e instalar a atualização agora?\n\n"
+        f"Novidades:\n{notes[:500]}..."
+    )
+    msg.setStandardButtons(
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+    )
+    msg.setDefaultButton(QMessageBox.StandardButton.Yes)
+
+    reply = msg.exec()
+
+    if reply == QMessageBox.StandardButton.Yes:
+        _run_update_with_progress(info)
+
+
+def _run_update_with_progress(info: dict):
+    """Executa atualização com barra de progresso."""
+    if _main_window is None:
+        return
+
+    progress = QProgressDialog("Baixando atualização...", "Cancelar", 0, 100, _main_window)
+    progress.setWindowTitle("Atualizando Libryno")
+    progress.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
+    progress.setMinimumDuration(0)
+    progress.setAutoClose(False)
+    progress.setAutoReset(False)
+
+    from src.updater import UpdateProgress
+    from src.updater import auto_updater
+
+    def on_start():
+        progress.setLabelText("Iniciando download...")
+        progress.setValue(0)
+
+    def on_progress(downloaded: int, total: int):
+        if total > 0:
+            percent = int((downloaded / total) * 100)
+            progress.setValue(percent)
+            progress.setLabelText(f"Baixando... {percent}% ({_format_bytes(downloaded)}/{_format_bytes(total)})")
+
+    def on_complete(success: bool, message: str):
+        progress.close()
+        if success:
+            QMessageBox.information(
+                _main_window,
+                "Atualização Concluída",
+                "A atualização foi instalada com sucesso!\n"
+                "O Libryno será reiniciado para aplicar as mudanças."
+            )
+            # Reiniciar app
+            QtCore.QCoreApplication.quit()
+            QtCore.QProcess.startDetached(sys.executable, sys.argv)
+        else:
+            QMessageBox.warning(
+                _main_window,
+                "Erro na Atualização",
+                f"Falha ao atualizar: {message}\n\n"
+                "Você pode baixar manualmente em:\n"
+                f"https://github.com/OrdoB/Libryno/releases/latest"
+            )
+
+    from src.updater import UpdateProgress
+    updater_progress = UpdateProgress(
+        on_start=on_start,
+        on_progress=on_progress,
+        on_complete=on_complete,
+    )
+
+    # Executa em thread separada
+    from src.updater import auto_updater
+    def update_worker():
+        auto_updater.apply_update(info, updater_progress)
+
+    import threading
+    threading.Thread(target=update_worker, daemon=True, name="UpdateApply").start()
+
+
+def _format_bytes(bytes_val: int) -> str:
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if bytes_val < 1024:
+            return f"{bytes_val:.1f} {unit}"
+        bytes_val /= 1024
+    return f"{bytes_val:.1f} TB"
+
+
 def _on_notification(data: dict):
     """Callback para notificações SSE em tempo real."""
     logger.info("SSE notification received: {}", data.get("type") or "unknown")
@@ -178,7 +302,7 @@ def _on_notification(data: dict):
             count = data.get("data", 0)
             NotificationsCRUD.create(
                 titulo="Nova notificação",
-                mensagem=f"Você tem {count} notificação(s) não lida(s).",
+                mensagem=f"Você tem {count} notificação(ões) não lida(s).",
                 tipo="sse_alert",
             )
         elif "ticket" in str(data.get("type", "")):

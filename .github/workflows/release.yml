@@ -1,0 +1,378 @@
+name: Libryno Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v2.1.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as prerelease'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  APP_NAME: Libryno
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # =============================================================================
+  # TESTES E LINT
+  # =============================================================================
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd LIBRYNO
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run linter (ruff)
+        run: |
+          cd LIBRYNO
+          ruff check src/
+          ruff format --check src/
+
+      - name: Run tests with coverage
+        run: |
+          cd LIBRYNO
+          pytest --cov=src --cov-report=xml --cov-fail-under=50
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./LIBRYNO/coverage.xml
+          flags: unittests
+
+  # =============================================================================
+  # BUILD WINDOWS
+  # =============================================================================
+  build-windows:
+    name: Build Windows Installer
+    needs: test
+    runs-on: windows-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    env:
+      PYTHON_VERSION: '3.11'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd LIBRYNO
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install pyinstaller nsis
+
+      - name: Install NSIS
+        run: |
+          choco install nsis --version 3.09
+
+      - name: Get version from tag
+        id: version
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Set version in build spec
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          (Get-Content LIBRYNO/build.spec) -replace 'version=.*', "version='$version'" | Set-Content LIBRYNO/build.spec
+
+      - name: Build with PyInstaller
+        run: |
+          cd LIBRYNO
+          pyinstaller build.spec --clean --noconfirm
+
+      - name: Build NSIS Installer
+        run: |
+          cd LIBRYNO
+          makensis packaging/windows/libryno.nsi
+
+      - name: Verify installer
+        run: |
+          ls -la dist/
+          ls -la *.exe
+
+      - name: Sign installer (if certificate available)
+        if: env.CODESIGN_CERT != '' && env.CODESIGN_PASSWORD != ''
+        run: |
+          $cert = "${{ secrets.CODESIGN_CERT }}"
+          $pwd = "${{ secrets.CODESIGN_PASSWORD }}"
+          $file = "dist\Libryno-Setup-${{ steps.version.outputs.VERSION }}.exe"
+          SignTool sign /f $cert /p $pwd /tr http://timestamp.digicert.com /td sha256 /fd sha256 $file
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            LIBRYNO/dist/Libryno-Setup-*.exe
+            LIBRYNO/*.exe
+          retention-days: 30
+
+  # =============================================================================
+  # BUILD LINUX
+  # =============================================================================
+  build-linux:
+    name: Build Linux Packages
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd LIBRYNO
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install pyinstaller
+
+      - name: Get version from tag
+        id: version
+        run: |
+          tag="${{ github.ref_name }}"
+          version="${tag#v}"
+          echo "VERSION=$version" >> $GITHUB_OUTPUT
+
+      - name: Set version in build spec
+        run: |
+          sed -i "s/version=.*/version='${{ steps.version.outputs.VERSION }}'/" LIBRYNO/build.spec
+
+      - name: Build with PyInstaller
+        run: |
+          cd LIBRYNO
+          pyinstallor build.spec --clean --noconfirm
+
+      - name: Build AppImage
+        run: |
+          cd LIBRYNO
+          # Instala appimagetool
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          # Cria estrutura AppDir
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/share/applications
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+          # Copia binário
+          cp dist/libryno AppDir/usr/bin/
+          # Cria .desktop
+          cat > AppDir/usr/share/applications/libryno.desktop << 'EOF'
+          [Desktop Entry]
+          Name=Libryno
+          Comment=Sistema de Gestão de Bibliotecas
+          Exec=libryno
+          Icon=libryno
+          Terminal=false
+          Type=Application
+          Categories=Office;Education;
+          EOF
+          # Copia ícone
+          cp src/img/icon.png AppDir/usr/share/icons/hicolor/256x256/apps/libryno.png
+          # Cria AppImage
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage AppDir libryno-${{ steps.version.outputs.VERSION }}-linux-x64.AppImage
+
+      - name: Build .deb package
+        run: |
+          cd LIBRYNO
+          # Cria estrutura deb
+          mkdir -p deb-package/DEBIAN
+          mkdir -p deb-package/usr/bin
+          mkdir -p deb-package/usr/share/applications
+          mkdir -p deb-package/usr/share/icons/hicolor/256x256/apps
+          mkdir -p deb-package/usr/share/doc/libryno
+          # Copia binário
+          cp dist/libryno deb-package/usr/bin/
+          cp src/img/icon.png deb-package/usr/share/icons/hicolor/256x256/apps/libryno.png
+          # .desktop
+          cat > deb-package/usr/share/applications/libryno.desktop << 'EOF'
+          [Desktop Entry]
+          Name=Libryno
+          Comment=Sistema de Gestão de Bibliotecas
+          Exec=libryno
+          Icon=libryno
+          Terminal=false
+          Type=Application
+          Categories=Office;Education;
+          EOF
+          # Control file
+          cat > deb-package/DEBIAN/control << EOF
+          Package: libryno
+          Version: ${{ steps.version.outputs.VERSION }}
+          Section: office
+          Priority: optional
+          Architecture: amd64
+          Depends: libc6 (>= 2.31), libglib2.0-0 (>= 2.64), libqt6core6, libqt6gui6, libqt6widgets6, libqt6sql6, libqt6network6
+          Maintainer: OrdoB <contato@ordob.com>
+          Description: Sistema de Gestão de Bibliotecas Públicas
+           O Libryno é um sistema completo de gestão de bibliotecas
+           públicas integrado ao ecossistema OrdoB.
+          EOF
+          # Build .deb
+          dpkg-deb --build deb-package libryno-${{ steps.version.outputs.VERSION }}-linux-x64.deb
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            LIBRYNO/*.AppImage
+            LIBRYNO/*.deb
+          retention-days: 30
+
+  # =============================================================================
+  # CREATE GITHUB RELEASE
+  # =============================================================================
+  release:
+    name: Create GitHub Release
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    steps:
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-installer
+          path: ./release-files/windows
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: ./release-files/linux
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          tag="${{ github.ref_name }}"
+          version="${tag#v}"
+          cat > release_notes.md << EOF
+          # Libryno v${version}
+
+          ## 📦 Downloads
+          ### Windows
+          - [Libryno-Setup-${version}.exe](https://github.com/${{ github.repository }}/releases/download/v${version}/Libryno-Setup-${version}.exe) - Instalador Windows (NSIS)
+
+          ### Linux
+          - [libryno-${version}-linux-x64.AppImage](https://github.com/${{ github.repository }}/releases/download/v${version}/libryno-${version}-linux-x64.AppImage) - AppImage portátil
+          - [libryno-${version}-linux-x64.deb](https://github.com/${{ github.repository }}/releases/download/v${version}/libryno-${version}-linux-x64.deb) - Debian/Ubuntu
+
+          ## 📝 Novidades
+          Ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+
+          ## ⚠️ Importante
+          - Windows: Execute como administrador para instalação completa
+          - Linux .deb: `sudo dpkg -i libryno-*.deb && sudo apt install -f`
+          - AppImage: `chmod +x libryno-*.AppImage && ./libryno-*.AppImage`
+
+          ---
+          **Checksums SHA256:**
+          $(sha256sum release-files/windows/* release-files/linux/* 2>/dev/null || echo "Calculando...")
+          EOF
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Libryno ${{ github.ref_name }}
+          body: ${{ steps.release_notes.outputs.notes }}
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          files: |
+            release-files/windows/*.exe
+            release-files/linux/*.AppImage
+            release-files/linux/*.deb
+          generate_release_notes: false
+
+  # =============================================================================
+  # PUBLISH DOCKER (opcional)
+  # =============================================================================
+  # docker:
+  #   name: Build & Push Docker
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #     - uses: docker/build-push-action@v5
+  #       with:
+  #         context: ./LIBRYNO
+  #         push: true
+  #         tags: |
+  #           ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+  #           ghcr.io/${{ github.repository }}:latest
+  #         cache-from: type=gha
+  #         cache-to: type=gha,mode=max
+
+  # =============================================================================
+  # NOTIFICATIONS
+  # =============================================================================
+  notify:
+    name: Notify Team
+    needs: release
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#releases'
+          text: 'Libryno ${{ github.ref_name }} ${{ job.status == "success" && "released" || "failed" }}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Send Discord notification
+        if: env.DISCORD_WEBHOOK != ''
+        run: |
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": \"Libryno ${{ github.ref_name }} ${{ job.status == 'success' && 'released 🚀' || 'failed ❌' }}\"}"

@@ -13,6 +13,7 @@ a = Analysis(
         ('src/ui/themes/*.qss', 'src/ui/themes'),
         ('img', 'img'),
         ('.env.example', '.'),
+        ('packaging', 'packaging'),
     ],
     hiddenimports=[
         'src',
@@ -59,7 +60,9 @@ a = Analysis(
         'src.utils.isbn_api',
         'src.utils.image_optimizer',
         'src.utils.sse_client',
+        'src.ui.themes.theme_manager',
         'src.utils.system_theme',
+        'src.updater',
         'bcrypt',
         'sqlalchemy',
         'sqlalchemy.dialects.sqlite',
@@ -85,6 +88,31 @@ a = Analysis(
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     noarchive=False,
+)
+
+pyz = PYZ(a.pure, a.zipped_data)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    [],
+    name='libryno',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=False,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon='img/icon.png',
 )
 
 pyz = PYZ(a.pure, a.zipped_data)
